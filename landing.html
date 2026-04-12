@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodWait — Know Before You Queue</title>
+  <meta name="description" content="Stop wasting time in food lines. FoodWait uses planetary queueing theory to predict your wait time before you leave.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* ─── Base ──────────────────────────────────────────────────── */
+    body { overflow: hidden; background: var(--bg); }
+
+    .slide-container {
+      height: 100vh; width: 100vw;
+      transition: transform 0.85s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+
+    /* Each slide is a full-viewport flex row */
+    .slide {
+      height: 100vh; width: 100vw;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ─── Two-column layout helper ──────────────────────────────── */
+    .slide-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+    }
+
+    /* Text column */
+    .col-text {
+      padding: 0 6vw 0 10vw;
+      position: relative;
+      z-index: 10;
+    }
+    .col-text.right { padding: 0 10vw 0 6vw; }
+
+    /* Video column — contains a smaller card */
+    .col-video {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .col-video.left { order: -1; }
+
+    /* The video card — constrained size */
+    .vid-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      aspect-ratio: 1 / 1;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 2.5px solid var(--black);
+      box-shadow: 8px 8px 0 var(--black);
+    }
+
+    .vid-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* Clip bottom-right corner watermark zone */
+      mask-image: radial-gradient(ellipse 92% 88% at 48% 48%, black 60%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 92% 88% at 48% 48%, black 60%, transparent 100%);
+    }
+
+    /* Slide-specific gradient overlays to tie text side to video */
+    .slide-overlay-right {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(to right, var(--bg) 0%, var(--bg) 15%, transparent 55%);
+    }
+    .slide-overlay-left {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(to left, var(--bg) 0%, var(--bg) 15%, transparent 55%);
+    }
+
+    /* Float animation for video panels */
+    .col-video { animation: vidFloat 18s ease-in-out infinite alternate; }
+    @keyframes vidFloat {
+      from { transform: translateY(-1.5%); }
+      to   { transform: translateY(1.5%); }
+    }
+
+    /* ─── Typography ────────────────────────────────────────────── */
+    .slide-kicker {
+      font-family: var(--head);
+      font-size: 0.85rem;
+      letter-spacing: 4px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      display: block;
+    }
+
+    .slide-title {
+      font-family: var(--head);
+      line-height: 0.88;
+      color: var(--black);
+      margin-bottom: 1.8rem;
+    }
+    .slide-title.xl { font-size: clamp(4.5rem, 11vw, 9.5rem); text-shadow: 4px 4px 0 var(--secondary); }
+    .slide-title.lg { font-size: clamp(3rem, 7vw, 6rem); text-shadow: 3px 3px 0 var(--secondary); }
+    .slide-title.accent { color: var(--primary); text-shadow: 3px 3px 0 var(--black); }
+
+    .slide-body {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 400px;
+      margin-bottom: 2.2rem;
+    }
+
+    /* Stat row */
+    .stat-row {
+      display: flex;
+      gap: 2.5rem;
+      margin-bottom: 2.2rem;
+    }
+    .stat-num {
+      font-family: var(--head);
+      font-size: 2.8rem;
+      color: var(--primary);
+      text-shadow: 2px 2px 0 var(--black);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ─── Steps grid (Slide 5) ───────────────────────────────────── */
+    .steps-full {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2.5rem;
+      position: relative; z-index: 10;
+    }
+    .steps-full::before {
+      content: '';
+      position: absolute;
+      top: 2.4rem; left: calc(16.66% + 0.5rem);
+      width: calc(66.66% - 1rem);
+      height: 2px;
+      background: var(--black);
+      opacity: 0.1;
+    }
+    .step-card {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    }
+    .slide.active .step-card:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.15s; }
+    .slide.active .step-card:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.3s; }
+    .slide.active .step-card:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.45s; }
+    .step-num {
+      font-family: var(--head); font-size: 4.5rem;
+      color: var(--primary); text-shadow: 3px 3px 0 var(--black);
+      line-height: 1; display: block; margin-bottom: 1rem;
+    }
+    .step-icon {
+      width: 48px; height: 48px;
+      background: var(--black); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      box-shadow: 3px 3px 0 var(--secondary);
+    }
+    .step-icon svg { width: 22px; height: 22px; stroke: var(--bg); }
+    .step-name {
+      font-family: var(--head); font-size: 1.5rem;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--black); margin-bottom: 0.5rem;
+    }
+    .step-desc {
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--muted); line-height: 1.55;
+    }
+
+    /* ─── Abyss (Slide 2) ───────────────────────────────────────── */
+    #abyssCanvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1; pointer-events: none;
+    }
+    .abyss-overlay {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(to top, rgba(26,24,20,0.92) 0%, rgba(26,24,20,0.5) 50%, rgba(26,24,20,0.0) 100%);
+    }
+    .abyss-text {
+      position: relative; z-index: 10;
+      text-align: center; width: 100%;
+    }
+    .abyss-headline {
+      font-family: var(--head);
+      font-size: clamp(4rem, 9vw, 8rem);
+      line-height: 0.88;
+      color: var(--primary);
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.8);
+      margin-bottom: 1.2rem;
+    }
+    .abyss-stat {
+      display: inline-flex;
+      gap: 3rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 1rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .abyss-stat-item { text-align: center; }
+    .abyss-stat-num {
+      font-family: var(--head); font-size: 2.2rem;
+      color: var(--secondary); line-height: 1;
+    }
+    .abyss-stat-label {
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 2px; color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+    }
+    /* Push content to lower portion of dark slide */
+    #slide2 { justify-content: flex-end; padding-bottom: 5vh; }
+
+    /* ─── Mission nav ────────────────────────────────────────────── */
+    .mission-nav {
+      position: fixed;
+      bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+      left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 2rem;
+      z-index: 1000;
+      background: rgba(244,241,222,0.85);
+      border: var(--border);
+      border-radius: 50px;
+      padding: 0.6rem 1rem;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+    }
+    .slide-indicators { display: flex; gap: 10px; }
+    .indicator {
+      width: 10px; height: 10px;
+      border: 2px solid var(--black);
+      border-radius: 50%; background: transparent;
+      cursor: pointer; padding: 0;
+      transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .indicator.active {
+      background: var(--primary);
+      transform: scale(1.35);
+      box-shadow: 2px 2px 0 var(--secondary);
+    }
+
+    /* ─── Slide counter ─────────────────────────────────────────── */
+    .slide-counter {
+      position: fixed; top: 1.8rem; right: 2.5rem;
+      font-family: var(--head); font-size: 0.9rem;
+      color: var(--muted); letter-spacing: 3px; z-index: 1000;
+    }
+
+    /* ─── Scroll hint ────────────────────────────────────────────── */
+    .scroll-hint {
+      position: fixed; bottom: 5rem; right: 2.2rem;
+      opacity: 0.4; z-index: 1000;
+      animation: hintBob 2s ease-in-out infinite;
+      transition: opacity 0.4s; display: flex;
+      flex-direction: column; align-items: center; gap: 5px;
+    }
+    .scroll-hint span {
+      font-family: var(--head); font-size: 0.65rem;
+      letter-spacing: 2px; color: var(--muted);
+      writing-mode: vertical-rl;
+    }
+    .scroll-hint svg { stroke: var(--muted); }
+    .scroll-hint.hidden { opacity: 0; pointer-events: none; }
+    @keyframes hintBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+    }
+
+    /* ─── Reveal animation ───────────────────────────────────────── */
+    .reveal-up {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+    }
+    .slide.active .reveal-up { opacity: 1; transform: none; }
+    .slide.active .reveal-up:nth-child(1) { transition-delay: 0.05s; }
+    .slide.active .reveal-up:nth-child(2) { transition-delay: 0.15s; }
+    .slide.active .reveal-up:nth-child(3) { transition-delay: 0.25s; }
+    .slide.active .reveal-up:nth-child(4) { transition-delay: 0.35s; }
+    .slide.active .reveal-up:nth-child(5) { transition-delay: 0.45s; }
+
+    /* Planet reveal */
+    .slide.active .col-video {
+      animation: vidReveal 0.9s cubic-bezier(0.22,1,0.36,1) forwards, vidFloat 18s ease-in-out 0.9s infinite alternate;
+    }
+    @keyframes vidReveal {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* HIW label/headline reveal */
+    .hiw-kicker {
+      font-family: var(--head); font-size: 0.85rem;
+      letter-spacing: 4px; color: var(--primary);
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+      margin-bottom: 0.8rem; display: block;
+    }
+    .hiw-title {
+      font-family: var(--head);
+      font-size: clamp(3rem, 7vw, 6rem);
+      line-height: 0.88; color: var(--black);
+      text-shadow: 3px 3px 0 var(--secondary);
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.55s var(--ease) 0.08s, transform 0.55s var(--ease) 0.08s;
+      margin-bottom: 3rem;
+    }
+    .slide.active .hiw-kicker { opacity: 1; transform: none; }
+    .slide.active .hiw-title  { opacity: 1; transform: none; }
+
+    .hiw-cta {
+      display: flex; align-items: center; gap: 1.5rem;
+      margin-top: 3rem;
+      opacity: 0; transition: opacity 0.5s var(--ease) 0.75s;
+    }
+    .hiw-cta-note {
+      font-family: var(--head); font-size: 0.85rem;
+      letter-spacing: 2px; color: var(--muted);
+    }
+
+    /* ─── Reduced motion ─────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .slide-container, .col-video { transition: none !important; animation: none !important; }
+      .reveal-up, .step-card, .hiw-kicker, .hiw-title { transition: none !important; opacity: 1 !important; transform: none !important; }
+    }
+
+    /* ─── Cosmic Plates Slide (Slide 1B) ────────────────────────── */
+    .plates-slide {
+      background: #0d0b0a;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* Blurred ambient background behind everything */
+    .plates-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 60%, rgba(212,32,39,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(239,202,82,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 20%, rgba(100,60,200,0.07) 0%, transparent 60%);
+    }
+
+    /* Ambient blurred food image behind as texture */
+    .plates-bg-img {
+      position: absolute; inset: 0; z-index: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(40px) brightness(0.25) saturate(1.5);
+      transition: background-image 1.2s ease;
+      transform: scale(1.15);
+    }
+
+    /* Top label */
+    .plates-top {
+      position: relative; z-index: 10;
+      text-align: center;
+      margin-bottom: 2.5vh;
+    }
+    .plates-eyebrow {
+      font-family: var(--head);
+      font-size: 0.85rem;
+      letter-spacing: 5px;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .plates-main-title {
+      font-family: var(--head);
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      color: #fff;
+      line-height: 0.9;
+      text-shadow: 0 0 40px rgba(212,32,39,0.5);
+    }
+    .plates-main-title span { color: var(--secondary); }
+
+    /* Food name tooltip */
+    .plates-tooltip {
+      position: absolute;
+      top: -3.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--secondary);
+      color: var(--black);
+      font-family: var(--head);
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0.5rem 1.4rem;
+      border-radius: 8px;
+      white-space: nowrap;
+      border: 2px solid var(--black);
+      box-shadow: 3px 3px 0 var(--black);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s, top 0.35s;
+      z-index: 20;
+    }
+    .plates-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -10px; left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--black);
+    }
+
+    /* Plates row */
+    .plates-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: clamp(1.5rem, 3vw, 3rem);
+      position: relative; z-index: 10;
+      padding: 0 4vw;
+    }
+
+    /* Individual plate */
+    .plate-item {
+      position: relative;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .plate-item.side { transform: translateY(40px) scale(0.78); }
+    .plate-item.side:hover { transform: translateY(30px) scale(0.82); }
+    .plate-item.active { transform: translateY(0) scale(1); }
+
+    /* Circular image frame */
+    .plate-circle {
+      width: clamp(200px, 28vw, 380px);
+      height: clamp(200px, 28vw, 380px);
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.1);
+      position: relative;
+      transition: border-color 0.4s;
+    }
+    .plate-item.active .plate-circle {
+      border-color: var(--secondary);
+      box-shadow: 0 0 60px rgba(239,202,82,0.3), 0 30px 60px rgba(0,0,0,0.6);
+    }
+    .plate-item.side .plate-circle {
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .plate-circle img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 12s linear;
+    }
+    .plate-item.active .plate-circle img {
+      animation: plateRotate 25s linear infinite;
+    }
+    @keyframes plateRotate {
+      from { transform: scale(1.05) rotate(0deg); }
+      to   { transform: scale(1.05) rotate(360deg); }
+    }
+
+    /* Golden spinning ring on active plate */
+    .plate-ring {
+      position: absolute; inset: -12px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--secondary);
+      border-right-color: var(--secondary);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .plate-item.active .plate-ring {
+      opacity: 1;
+      animation: ringSpinCW 4s linear infinite;
+    }
+    .plate-ring-ccw {
+      position: absolute; inset: -20px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(239,202,82,0.4);
+      border-left-color: rgba(239,202,82,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .plate-item.active .plate-ring-ccw {
+      opacity: 1;
+      animation: ringSpinCCW 7s linear infinite;
+    }
+    @keyframes ringSpinCW  { to { transform: rotate(360deg); } }
+    @keyframes ringSpinCCW { to { transform: rotate(-360deg); } }
+
+    /* Number badge */
+    .plate-num {
+      position: absolute;
+      bottom: -1.2rem; right: 0.5rem;
+      font-family: var(--head);
+      font-size: 1rem;
+      color: var(--secondary);
+      opacity: 0.5;
+      letter-spacing: 2px;
+    }
+    .plate-item.active .plate-num { opacity: 1; }
+
+    /* Tag chips below active plate */
+    .plates-tags {
+      position: relative; z-index: 10;
+      margin-top: 3vh;
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .slide.active .plates-tags { opacity: 1; transform: none; transition-delay: 0.4s; }
+    .tag-chip {
+      font-family: var(--head);
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 99px;
+      padding: 0.3rem 0.9rem;
+      text-transform: uppercase;
+    }
+    .tag-chip.hot {
+      background: rgba(212,32,39,0.2);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Bottom text + CTA */
+    .plates-bottom {
+      position: relative; z-index: 10;
+      margin-top: 2.5vh;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      justify-content: center;
+    }
+    .plates-subtitle {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      max-width: 340px;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-counter" id="slideCounter">01 / 05</div>
+
+  <div class="scroll-hint" id="scrollHint">
+    <span>SCROLL</span>
+    <svg width="12" height="18" viewBox="0 0 12 18" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2v14M1 11l5 5 5-5"/>
+    </svg>
+  </div>
+
+  <div class="slide-container" id="slideContainer">
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 1 ── HERO: "SKIP THE QUEUE"
+         Hook. Bold statement. Single CTA.
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide active" id="slide1">
+      <!-- Gradient bridge between text and video -->
+      <div class="slide-overlay-right"></div>
+
+      <div class="slide-cols">
+        <!-- Left: Text -->
+        <div class="col-text">
+          <div class="status-badge reveal-up" style="margin-bottom: 1.5rem; display: inline-flex;">
+            <div class="dot"></div>
+            <span>System: Operational</span>
+          </div>
+
+          <h1 class="slide-title xl reveal-up">
+            SKIP<br>THE<br><span style="color:var(--primary);">QUEUE.</span>
+          </h1>
+
+          <p class="slide-body reveal-up">
+            Know your wait time before you leave the house. Powered by planetary queueing theory.
+          </p>
+
+          <div class="reveal-up">
+            <a href="index.html" class="btn">Launch the App →</a>
+          </div>
+        </div>
+
+        <!-- Right: Hamburger video -->
+        <div class="col-video">
+          <div class="vid-wrap">
+            <video src="Hamburger_galaxy_rotating_202604120211.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 2 ── COSMIC MENU: Food planet carousel
+         Inspired by restaurant slider: 3 circular plates,
+         the active one elevated and spinning with a golden ring.
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide plates-slide" id="slide-menu">
+      <!-- Blurred ambient bg -->
+      <div class="plates-bg"></div>
+      <div class="plates-bg-img" id="platesBgImg" style="background-image:url('kebab_planet_1775951523618.png');"></div>
+
+      <!-- Top title -->
+      <div class="plates-top">
+        <span class="plates-eyebrow reveal-up">The Cosmos of Taste</span>
+        <div class="plates-main-title reveal-up">FOOD<br><span>GALAXY</span></div>
+      </div>
+
+      <!-- Three plates -->
+      <div class="plates-row" id="platesRow">
+
+        <!-- Plate 1: Kebab -->
+        <div class="plate-item active" id="plate-0" data-name="COSMIC DÖNER" data-tags="Grilled · Legendary · Fast">
+          <div class="plates-tooltip" id="tooltip-0">COSMIC DÖNER</div>
+          <div class="plate-ring"></div>
+          <div class="plate-ring-ccw"></div>
+          <div class="plate-circle">
+            <img src="kebab_planet_1775951523618.png" alt="Cosmic Döner">
+          </div>
+          <span class="plate-num">01</span>
+        </div>
+
+        <!-- Plate 2: Pizza -->
+        <div class="plate-item side" id="plate-1" data-name="PIZZA NEBULA" data-tags="Crispy · Cosmic · Classic">
+          <div class="plates-tooltip" id="tooltip-1">PIZZA NEBULA</div>
+          <div class="plate-ring"></div>
+          <div class="plate-ring-ccw"></div>
+          <div class="plate-circle">
+            <img src="pizza_galaxy_1775951547403.png" alt="Pizza Galaxy">
+          </div>
+          <span class="plate-num">02</span>
+        </div>
+
+        <!-- Plate 3: Ramen -->
+        <div class="plate-item side" id="plate-2" data-name="RAMEN NEBULA" data-tags="Steamy · Deep · Umami">
+          <div class="plates-tooltip" id="tooltip-2">RAMEN NEBULA</div>
+          <div class="plate-ring"></div>
+          <div class="plate-ring-ccw"></div>
+          <div class="plate-circle">
+            <img src="noodle_nebula_1775951564639.png" alt="Ramen Nebula">
+          </div>
+          <span class="plate-num">03</span>
+        </div>
+
+      </div>
+
+      <!-- Dynamic tag chips -->
+      <div class="plates-tags" id="platesTags">
+        <span class="tag-chip hot" id="tagChip0">Grilled</span>
+        <span class="tag-chip" id="tagChip1">Legendary</span>
+        <span class="tag-chip" id="tagChip2">Fast</span>
+      </div>
+
+      <!-- CTA -->
+      <div class="plates-bottom">
+        <a href="index.html" class="btn reveal-up" style="background:transparent; color:var(--secondary); border-color:var(--secondary); box-shadow: 3px 3px 0 var(--secondary);">Find It Near You →</a>
+        <p class="plates-subtitle reveal-up">Click any food planet to explore. Know your wait before you leave.</p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 3 ── THE PROBLEM: "THE INFINITE ABYSS"
+         Establish the pain. Dark, dramatic, visceral.
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide" id="slide2" style="background:#1a1814; flex-direction:column;">
+      <canvas id="abyssCanvas"></canvas>
+      <div class="abyss-overlay"></div>
+
+      <div class="abyss-text reveal-up" style="padding: 0 10vw;">
+        <div class="status-badge reveal-up" style="background:var(--black); color:var(--white); box-shadow:none; margin-bottom:1.5rem; display:inline-flex;">
+          <div class="dot" style="background:var(--red);"></div>
+          <span>Problem Detected</span>
+        </div>
+
+        <h2 class="abyss-headline reveal-up">
+          THE INFINITE<br>ABYSS.
+        </h2>
+
+        <div class="abyss-stat reveal-up">
+          <div class="abyss-stat-item">
+            <div class="abyss-stat-num">3.5h</div>
+            <div class="abyss-stat-label">Lost per week</div>
+          </div>
+          <div class="abyss-stat-item">
+            <div class="abyss-stat-num">182h</div>
+            <div class="abyss-stat-label">Lost per year</div>
+          </div>
+          <div class="abyss-stat-item">
+            <div class="abyss-stat-num">37%</div>
+            <div class="abyss-stat-label">Leave frustrated</div>
+          </div>
+        </div>
+
+        <p class="reveal-up" style="color:rgba(255,255,255,0.5); font-size:1rem; font-weight:500; letter-spacing:1px; text-transform:uppercase;">
+          Your time belongs in the mission, not the lobby.
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 3 ── HOW IT WORKS: "THREE STEPS"
+         The solution is dead simple. Show it before the detail.
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide" id="slide3" style="flex-direction:column; padding: 0 10vw;">
+      <span class="hiw-kicker">THE SOLUTION</span>
+      <h2 class="hiw-title">THREE<br>STEPS.</h2>
+
+      <div class="steps-full">
+        <div class="step-card">
+          <span class="step-num">01</span>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="step-name">Locate</div>
+          <p class="step-desc">Share your GPS or type any city. FoodWait locks onto your coordinates instantly.</p>
+        </div>
+
+        <div class="step-card">
+          <span class="step-num">02</span>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="step-name">Scan</div>
+          <p class="step-desc">100+ nearby food spots loaded from live map data. Filter by cuisine type.</p>
+        </div>
+
+        <div class="step-card">
+          <span class="step-num">03</span>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="step-name">Calculate</div>
+          <p class="step-desc">Adjust queue size, staff & prep time. Get your P10–P90 wait window instantly.</p>
+        </div>
+      </div>
+
+      <div class="hiw-cta">
+        <a href="index.html" class="btn">Try It Free →</a>
+        <span class="hiw-cta-note">NO SIGN-UP · FREE FOREVER</span>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 4 ── FEATURE: "SCAN THE QUADRANT"
+         Live map scanning demo. Ramen video = "search for food".
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide" id="slide4">
+      <div class="slide-overlay-right"></div>
+
+      <div class="slide-cols">
+        <!-- Left: Text -->
+        <div class="col-text">
+          <span class="slide-kicker reveal-up">📡 Radar: Online</span>
+          <h2 class="slide-title lg reveal-up">SCAN<br>THE<br><span class="accent">QUADRANT</span></h2>
+          <p class="slide-body reveal-up">
+            Search any food type — döner, ramen, pizza, burgers — within your local zone. FoodWait maps 100+ live locations instantly.
+          </p>
+          <div class="stat-row reveal-up">
+            <div>
+              <div class="stat-num">100+</div>
+              <div class="stat-label">Food spots</div>
+            </div>
+            <div>
+              <div class="stat-num">3km</div>
+              <div class="stat-label">Scan radius</div>
+            </div>
+            <div>
+              <div class="stat-num">&lt;2s</div>
+              <div class="stat-label">Load time</div>
+            </div>
+          </div>
+          <a href="index.html" class="btn reveal-up">Initiate Scan →</a>
+        </div>
+
+        <!-- Right: Ramen video -->
+        <div class="col-video">
+          <div class="vid-wrap">
+            <video src="Ramen_bowl_as_202604120219.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         SLIDE 5 ── PROOF: "COSMIC ACCURACY"
+         Why our math is better. Pizza video = "precision".
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide" id="slide5">
+      <div class="slide-overlay-left"></div>
+
+      <div class="slide-cols">
+        <!-- Left: Pizza video -->
+        <div class="col-video left">
+          <div class="vid-wrap">
+            <video src="Pizza_rotating_as_202604120221.mp4" autoplay loop muted playsinline></video>
+          </div>
+        </div>
+
+        <!-- Right: Text -->
+        <div class="col-text right">
+          <span class="slide-kicker reveal-up">🔬 Engine: Active</span>
+          <h2 class="slide-title lg reveal-up">COSMIC<br><span class="accent">ACCURACY</span></h2>
+          <p class="slide-body reveal-up">
+            Our M/Eₖ/c queueing model runs 1,000 Monte Carlo simulations per request, giving you an 80% confidence wait band — not a guess.
+          </p>
+          <div class="stat-row reveal-up">
+            <div>
+              <div class="stat-num">1000</div>
+              <div class="stat-label">Simulations</div>
+            </div>
+            <div>
+              <div class="stat-num">80%</div>
+              <div class="stat-label">Confidence</div>
+            </div>
+            <div>
+              <div class="stat-num">5</div>
+              <div class="stat-label">Erlang phases</div>
+            </div>
+          </div>
+          <a href="index.html" class="btn reveal-up">Launch Mission →</a>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /slide-container -->
+
+  <!-- Mission Control Nav -->
+  <div class="mission-nav">
+    <div class="slide-indicators" id="indicators">
+      <button class="indicator active" data-slide="0" aria-label="Slide 1: Hero" type="button"></button>
+      <button class="indicator" data-slide="1" aria-label="Slide 2: Food Galaxy" type="button"></button>
+      <button class="indicator" data-slide="2" aria-label="Slide 3: The Problem" type="button"></button>
+      <button class="indicator" data-slide="3" aria-label="Slide 4: How It Works" type="button"></button>
+      <button class="indicator" data-slide="4" aria-label="Slide 5: Scan" type="button"></button>
+      <button class="indicator" data-slide="5" aria-label="Slide 6: Accuracy" type="button"></button>
+    </div>
+    <a href="index.html" class="btn" style="padding:0.5rem 1.2rem; font-size:0.85rem;">Launch App →</a>
+  </div>
+
+  <script>
+    const container     = document.getElementById('slideContainer');
+    const indicators    = document.querySelectorAll('.indicator');
+    const slides        = document.querySelectorAll('.slide');
+    const counter       = document.getElementById('slideCounter');
+    const scrollHint    = document.getElementById('scrollHint');
+    let current         = 0;
+    let transitioning   = false;
+
+    function goTo(idx) {
+      if (idx < 0 || idx >= slides.length || transitioning) return;
+      transitioning = true;
+      current = idx;
+
+      container.style.transform = `translateY(-${current * 100}vh)`;
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      indicators.forEach((d, i) => d.classList.toggle('active', i === current));
+      counter.textContent = `0${current + 1} / 0${slides.length}`;
+      scrollHint.classList.toggle('hidden', current === slides.length - 1);
+
+      // Show HIW CTA on slide 4 (index 3 = "How It Works")
+      const cta = document.querySelector('.hiw-cta');
+      if (cta) cta.style.opacity = current === 3 ? '1' : '0';
+
+      setTimeout(() => { transitioning = false; }, 900);
+    }
+
+    // Wheel
+    let lastWheel = 0;
+    window.addEventListener('wheel', e => {
+      const now = Date.now();
+      if (Math.abs(e.deltaY) < 20 || now - lastWheel < 950) return;
+      lastWheel = now;
+      goTo(e.deltaY > 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    // Keyboard
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+      if (e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+    });
+
+    // Touch
+    let touchY = 0;
+    window.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchend', e => {
+      const d = touchY - e.changedTouches[0].clientY;
+      if (Math.abs(d) < 50) return;
+      goTo(d > 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    // Indicators
+    indicators.forEach(btn => btn.addEventListener('click', () => goTo(+btn.dataset.slide)));
+
+    // ── Abyss Canvas Renderer ──────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('abyssCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        canvas.width  = canvas.offsetWidth  || window.innerWidth;
+        canvas.height = canvas.offsetHeight || window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const VP = { x: 0.5, y: 0.28 };
+
+      function drawPerson(x, y, size, alpha) {
+        const headR = size * 0.13;
+        const bodyW = size * 0.28;
+        const bodyH = size * 0.36;
+        const legH  = size * 0.34;
+        const armW  = Math.max(1, size * 0.07);
+
+        ctx.save();
+        ctx.globalAlpha = Math.min(alpha, 0.95);
+
+        // Shadow
+        ctx.save();
+        ctx.globalAlpha *= 0.25;
+        ctx.filter = 'blur(4px)';
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 2, bodyW * 0.7, bodyW * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = '#111';
+        ctx.strokeStyle = '#111';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = armW;
+
+        // Head (slightly drooped)
+        ctx.beginPath();
+        ctx.arc(x - size * 0.04, y - bodyH - legH - headR * 1.1, headR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body (hunched trapezoid)
+        ctx.beginPath();
+        ctx.moveTo(x - bodyW * 0.38, y - bodyH - legH + headR * 0.2);
+        ctx.lineTo(x + bodyW * 0.52, y - bodyH - legH);
+        ctx.lineTo(x + bodyW * 0.38, y - legH);
+        ctx.lineTo(x - bodyW * 0.44, y - legH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Legs
+        ctx.fillRect(x - bodyW * 0.3, y - legH, bodyW * 0.2, legH);
+        ctx.fillRect(x + bodyW * 0.1, y - legH * 0.85, bodyW * 0.2, legH * 0.85);
+
+        // Arms (dangling, exhausted)
+        ctx.beginPath();
+        ctx.moveTo(x - bodyW * 0.44, y - legH - bodyH * 0.85);
+        ctx.quadraticCurveTo(x - bodyW * 0.72, y - legH - bodyH * 0.35, x - bodyW * 0.55, y - legH + size * 0.04);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x + bodyW * 0.48, y - legH - bodyH * 0.82);
+        ctx.quadraticCurveTo(x + bodyW * 0.68, y - legH - bodyH * 0.28, x + bodyW * 0.5, y - legH + size * 0.02);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      const NUM = 30;
+      const LANES = [-0.22, -0.09, 0.03, 0.15];
+      const people = Array.from({ length: NUM }, (_, i) => ({
+        depth: i / NUM,
+        lane: LANES[i % LANES.length],
+        speed: 0.0005 + Math.random() * 0.00025,
+        sway: (Math.random() - 0.5) * 0.012,
+        bob: Math.random() * Math.PI * 2
+      }));
+
+      function project(nx, depth, W, H) {
+        const vx = VP.x * W, vy = VP.y * H;
+        const sc = 0.03 + depth * depth * 3.5;
+        return {
+          x: vx + nx * W * sc,
+          y: vy + (H - vy) * depth,
+          sc
+        };
+      }
+
+      function drawFloor(W, H) {
+        const vx = VP.x * W, vy = VP.y * H;
+        ctx.save();
+        // Subtle floor gradient
+        const grad = ctx.createLinearGradient(0, vy, 0, H);
+        grad.addColorStop(0, 'rgba(50,45,38,0)');
+        grad.addColorStop(0.5, 'rgba(35,30,24,0.7)');
+        grad.addColorStop(1, 'rgba(18,16,12,1)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, vy, W, H - vy);
+
+        // Convergence lines
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 16; i++) {
+          const t = i / 16;
+          const bx = (t - 0.5) * 1.4 * W + W / 2;
+          ctx.strokeStyle = `rgba(255,255,255,${0.03 + t * 0.04})`;
+          ctx.beginPath();
+          ctx.moveTo(vx, vy);
+          ctx.lineTo(bx, H);
+          ctx.stroke();
+        }
+        // Depth rings
+        for (let d = 0.15; d < 1; d += 0.14) {
+          const p1 = project(-0.7, d, W, H);
+          const p2 = project(0.7, d, W, H);
+          ctx.strokeStyle = `rgba(255,255,255,${d * 0.07})`;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      let t = 0;
+      function frame() {
+        const W = canvas.width, H = canvas.height;
+        if (!W || !H) { requestAnimationFrame(frame); return; }
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#1a1814';
+        ctx.fillRect(0, 0, W, H);
+
+        drawFloor(W, H);
+
+        t += 0.016;
+        people.sort((a, b) => a.depth - b.depth);
+
+        for (const p of people) {
+          p.depth += p.speed;
+          if (p.depth > 1.04) p.depth = 0.01;
+
+          const bob = Math.sin(t * 1.6 + p.bob) * 0.003 * p.depth;
+          const { x, y, sc } = project(p.lane + p.sway, p.depth + bob, W, H);
+          const size = sc * H * 0.28;
+          if (size < 6) continue;
+
+          const alpha = Math.min(p.depth * 4, 1) * Math.max(0, 1 - (p.depth - 0.82) / 0.18);
+          if (alpha <= 0.02) continue;
+          drawPerson(x, y, size, alpha);
+        }
+
+        // Top fog
+        const fog = ctx.createLinearGradient(0, 0, 0, H * 0.42);
+        fog.addColorStop(0, 'rgba(26,24,20,1)');
+        fog.addColorStop(1, 'rgba(26,24,20,0)');
+        ctx.fillStyle = fog;
+        ctx.fillRect(0, 0, W, H * 0.42);
+
+        requestAnimationFrame(frame);
+      }
+      frame();
+    })();
+
+    // ── Cosmic Plates Carousel ─────────────────────────────────────
+    (function() {
+      const plates = document.querySelectorAll('.plate-item');
+      const bgImg  = document.getElementById('platesBgImg');
+      const tagsEl = document.getElementById('platesTags');
+
+      const DATA = [
+        { name: 'COSMIC DÖNER',  img: 'kebab_planet_1775951523618.png',    tags: ['Grilled', 'Legendary', 'Fast'] },
+        { name: 'PIZZA NEBULA',  img: 'pizza_galaxy_1775951547403.png',    tags: ['Crispy', 'Cosmic', 'Classic'] },
+        { name: 'RAMEN NEBULA',  img: 'noodle_nebula_1775951564639.png',   tags: ['Steamy', 'Deep', 'Umami'] }
+      ];
+
+      let autoTimer;
+
+      function setActive(idx) {
+        plates.forEach((pl, i) => {
+          const isActive = i === idx;
+          pl.classList.toggle('active', isActive);
+          pl.classList.toggle('side', !isActive);
+
+          // Tooltip
+          const tip = pl.querySelector('.plates-tooltip');
+          if (tip) {
+            tip.style.opacity = isActive ? '1' : '0';
+            tip.style.top     = isActive ? '-4.2rem' : '-3.5rem';
+          }
+        });
+
+        // Swap background
+        if (bgImg) bgImg.style.backgroundImage = `url('${DATA[idx].img}')`;
+
+        // Swap tags
+        if (tagsEl) {
+          const chips = tagsEl.querySelectorAll('.tag-chip');
+          DATA[idx].tags.forEach((t, i) => {
+            if (chips[i]) {
+              chips[i].textContent = t;
+              chips[i].className = 'tag-chip' + (i === 0 ? ' hot' : '');
+            }
+          });
+        }
+      }
+
+      // Click to activate
+      plates.forEach((pl, i) => {
+        pl.addEventListener('click', () => {
+          clearInterval(autoTimer);
+          setActive(i);
+          startAuto(i);
+        });
+      });
+
+      // Auto-rotate every 4 seconds
+      function startAuto(start = 0) {
+        let cur = start;
+        autoTimer = setInterval(() => {
+          cur = (cur + 1) % plates.length;
+          setActive(cur);
+        }, 4000);
+      }
+
+      // Init
+      setActive(0);
+      startAuto(0);
+    })();
+  </script>
+</body>
+</html>
