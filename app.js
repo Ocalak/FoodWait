@@ -398,17 +398,17 @@ function updateCalculation() {
     //     todBadge.className    = `tod-badge ${result.tod.cls}`;
     // }
 
-    // Smart Status Label (Planetono Style)
+    // Smart status label
     let label = "";
     let color = "#22c55e"; // green
     if (result.rho < 0.5) {
-        label = "SYSTEM STABLE";
+        label = "Looks calm";
         color = "var(--green)";
     } else if (result.rho < 0.8) {
-        label = "HEAVY LOAD";
+        label = "Busy right now";
         color = "var(--secondary)";
     } else {
-        label = "CRITICAL SATURATION";
+        label = "High wait likely";
         color = "var(--primary)";
     }
     
@@ -418,17 +418,17 @@ function updateCalculation() {
     // Model label
     const balkPct = Math.round((1 - result.balkFactor) * 100);
     modelLabel.innerHTML  =
-        `M/E<sub>${result.k}</sub>/c · PHASE: ${result.k} · BALKING: ${balkPct}%`;
+        `Queue model M/E<sub>${result.k}</sub>/c · ${result.k} service phases · walk-away estimate ${balkPct}%`;
 
     // System load bar (logic only, bar is hidden in current design)
     // const rhoPct = Math.round(result.rho * 100);
     // ...
 
     loadNote.textContent =
-        result.rho >= 1    ? "WARNING: SYSTEM SATURATED. QUEUE GROWTH EXPONENTIAL." :
-        result.rho >= 0.85 ? "CAUTION: HIGH VARIABILITY DETECTED." :
-        result.rho >= 0.6  ? "NOTICE: MODERATE CONGESTION LIKELY." :
-                             "NOMINAL: LOW LOAD DETECTED.";
+        result.rho >= 1    ? "Very crowded right now — estimates may swing upward quickly." :
+        result.rho >= 0.85 ? "High demand window — expect longer lines than usual." :
+        result.rho >= 0.6  ? "Moderate rush — plan a little extra time." :
+                             "Smooth flow at the moment.";
 }
 
 // ─── Network: Geoapify Places API ─────────────────────────────────────────────

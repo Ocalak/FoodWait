@@ -21,7 +21,7 @@
             <h1>FoodWait</h1>
             <div class="status-badge">
                 <div class="dot"></div>
-                <span class="subtitle">Mission Control · M/E<sub>k</sub>/c Engine</span>
+                <span class="subtitle">Live Queue Insights · M/E<sub>k</sub>/c Model</span>
             </div>
         </header>
 
@@ -61,11 +61,11 @@
                 <div>
                     <div class="status-badge" style="margin-bottom: 0.5rem; background: var(--primary); color: var(--white); box-shadow: none;">
                         <div class="dot" style="background: white;"></div>
-                        <span>TARGET ACQUIRED</span>
+                        <span>Now Estimating</span>
                     </div>
                     <h2 id="modalShopName" style="font-size: 3rem; font-family: var(--head); text-transform: uppercase;">Shop Name</h2>
                 </div>
-                <button id="closeModal" class="btn" style="padding: 0.6rem 1rem; font-size: 0.8rem;">Abort Mission</button>
+                <button id="closeModal" class="btn" style="padding: 0.6rem 1rem; font-size: 0.8rem;">Close</button>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
@@ -73,14 +73,14 @@
                 <div class="sliders organic-frame" style="background: var(--surface); padding: 2rem; box-shadow: var(--shadow);">
                     <div class="slider-group">
                         <div class="slider-header">
-                            <span>PREP FREQUENCY</span>
+                            <span>AVG PREP TIME</span>
                             <span id="prepValue" class="slider-val">5 <em>min</em></span>
                         </div>
                         <input type="range" id="prepRange" min="1" max="30" value="5" aria-label="Prep frequency in minutes">
                     </div>
                     <div class="slider-group">
                         <div class="slider-header">
-                            <span>QUEUE LENGTH</span>
+                            <span>PEOPLE AHEAD</span>
                             <span id="queueValue" class="slider-val">4</span>
                         </div>
                         <input type="range" id="queueRange" min="0" max="20" value="4" aria-label="Queue length">
@@ -88,14 +88,14 @@
                     </div>
                     <div class="slider-group">
                         <div class="slider-header">
-                            <span>STAFF CAPACITY</span>
+                            <span>ACTIVE STAFF</span>
                             <span id="staffValue" class="slider-val">2</span>
                         </div>
                         <input type="range" id="staffRange" min="1" max="8" value="2" aria-label="Staff capacity">
                     </div>
                     <div class="slider-group">
                         <div class="slider-header">
-                            <span>ARRIVAL VELOCITY</span>
+                            <span>ARRIVALS / MIN</span>
                             <span id="arrivalValue" class="slider-val">3 <em>/min</em></span>
                         </div>
                         <input type="range" id="arrivalRange" min="1" max="10" value="3" aria-label="Arrival velocity per minute">
@@ -105,7 +105,7 @@
                 <!-- Right: Analytics -->
                 <div class="result-card organic-frame" style="background: var(--black); color: var(--white); padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; box-shadow: 4px 4px 0 var(--primary);">
                     <div class="result-top">
-                        <div class="result-eyebrow" style="color: var(--secondary); font-family: var(--head); letter-spacing: 2px;">PROBABLE WAIT TIME</div>
+                        <div class="result-eyebrow" style="color: var(--secondary); font-family: var(--head); letter-spacing: 2px;">ESTIMATED WAIT TIME</div>
                         <div class="result-main">
                             <span id="waitTime" style="color: var(--white); text-shadow: 4px 4px 0 var(--primary); font-size: 5.5rem;">--</span>
                             <span class="result-unit" style="color: var(--secondary); font-family: var(--head);">MIN</span>
@@ -129,7 +129,7 @@
                 </div>
             </div>
 
-            <div id="modelLabel" class="model-label" style="margin-top: 2rem; color: #777; text-align: right; font-family: var(--head); letter-spacing: 1px;">M/E_k/c SIMULATION ACTIVE</div>
+            <div id="modelLabel" class="model-label" style="margin-top: 2rem; color: #777; text-align: right; font-family: var(--head); letter-spacing: 1px;">Queue model: M/E_k/c · Live simulation</div>
         </div>
     </div>
 
