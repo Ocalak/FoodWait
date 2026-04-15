@@ -1,0 +1,564 @@
+<!-- Animated Demo Slide - Insert this into landing.html carousel -->
+<section class="slide demo-slide" id="slide-demo" style="background: linear-gradient(135deg, #F4F1DE 0%, #FFF5E6 100%); flex-direction: column; position: relative; overflow: hidden;">
+  
+  <!-- Animated Demo Container -->
+  <div class="demo-container">
+    
+    <!-- Left: Text Content -->
+    <div class="demo-text">
+      <div class="status-badge reveal-up" style="margin-bottom: 1.5rem; display: inline-flex;">
+        <div class="dot" style="background: #22c55e;"></div>
+        <span>Live Demo</span>
+      </div>
+
+      <h2 class="slide-title lg reveal-up">
+        SEE IT IN<br><span style="color: var(--primary);">ACTION</span>
+      </h2>
+
+      <p class="slide-body reveal-up">
+        Watch how MCR MCP finds restaurants near you, shows real-time queue data, and helps you skip the line with accurate wait time predictions.
+      </p>
+
+      <div class="reveal-up">
+        <a href="/app" class="btn">Try It Now →</a>
+      </div>
+    </div>
+
+    <!-- Right: Animated Demo -->
+    <div class="demo-animation">
+      <div class="phone-frame">
+        <div class="phone-screen" id="demoScreen">
+          
+          <!-- Step 1: Search Screen -->
+          <div class="demo-step active" id="step-1">
+            <div class="demo-header">MCR MCP</div>
+            <div class="demo-title">Find Food Near You</div>
+            
+            <div class="demo-input-group">
+              <input type="text" placeholder="What are you looking for?" class="demo-input" id="searchInput" value="">
+              <div class="demo-cursor"></div>
+            </div>
+            
+            <div class="demo-input-group">
+              <input type="text" placeholder="Enter city..." class="demo-input" value="">
+            </div>
+            
+            <button class="demo-btn">SEARCH</button>
+          </div>
+
+          <!-- Step 2: Map View -->
+          <div class="demo-step" id="step-2">
+            <div class="demo-header">MCR MCP</div>
+            <div class="demo-map">
+              <svg viewBox="0 0 300 400" class="map-svg">
+                <!-- Map background -->
+                <rect width="300" height="400" fill="#E8F4F8"/>
+                
+                <!-- Map markers with animations -->
+                <circle cx="80" cy="100" r="12" fill="#22c55e" class="marker marker-green" style="animation: pulse-green 2s infinite;"/>
+                <text x="80" y="105" text-anchor="middle" font-size="8" fill="white" font-weight="bold">8m</text>
+                
+                <circle cx="150" cy="150" r="12" fill="#f97316" class="marker marker-orange" style="animation: pulse-orange 2s infinite 0.3s;"/>
+                <text x="150" y="155" text-anchor="middle" font-size="8" fill="white" font-weight="bold">18m</text>
+                
+                <circle cx="220" cy="200" r="12" fill="#ef4444" class="marker marker-red" style="animation: pulse-red 2s infinite 0.6s;"/>
+                <text x="220" y="205" text-anchor="middle" font-size="8" fill="white" font-weight="bold">32m</text>
+                
+                <circle cx="100" cy="280" r="12" fill="#22c55e" class="marker marker-green" style="animation: pulse-green 2s infinite 0.9s;"/>
+                <text x="100" y="285" text-anchor="middle" font-size="8" fill="white" font-weight="bold">5m</text>
+                
+                <circle cx="200" cy="320" r="12" fill="#f97316" class="marker marker-orange" style="animation: pulse-orange 2s infinite 1.2s;"/>
+                <text x="200" y="325" text-anchor="middle" font-size="8" fill="white" font-weight="bold">24m</text>
+                
+                <!-- User location -->
+                <circle cx="150" cy="200" r="8" fill="#D42027" stroke="#fff" stroke-width="2" class="user-location" style="animation: pulse-user 1.5s infinite;"/>
+              </svg>
+            </div>
+            <div class="demo-label">30 restaurants found</div>
+          </div>
+
+          <!-- Step 3: Results List -->
+          <div class="demo-step" id="step-3">
+            <div class="demo-header">MCR MCP</div>
+            <div class="demo-results">
+              
+              <!-- Result 1 -->
+              <div class="result-card" style="animation: slideIn 0.5s ease-out;">
+                <div class="result-rank">#1</div>
+                <div class="result-name">Tofu Vegan</div>
+                <div class="result-distance">0.2 km</div>
+                <div class="result-status open">✓ Open now</div>
+                <div class="result-wait">
+                  <span class="wait-time">8 min</span>
+                  <span class="wait-level low">Low Wait</span>
+                </div>
+                <div class="result-queue">
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                </div>
+              </div>
+
+              <!-- Result 2 -->
+              <div class="result-card" style="animation: slideIn 0.5s ease-out 0.2s both;">
+                <div class="result-rank">#2</div>
+                <div class="result-name">Kebab House</div>
+                <div class="result-distance">0.5 km</div>
+                <div class="result-status open">✓ Open now</div>
+                <div class="result-wait">
+                  <span class="wait-time">18 min</span>
+                  <span class="wait-level moderate">Moderate</span>
+                </div>
+                <div class="result-queue">
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                </div>
+              </div>
+
+              <!-- Result 3 -->
+              <div class="result-card" style="animation: slideIn 0.5s ease-out 0.4s both;">
+                <div class="result-rank">#3</div>
+                <div class="result-name">Pizza Place</div>
+                <div class="result-distance">0.8 km</div>
+                <div class="result-status closed">✕ Closes in 2h</div>
+                <div class="result-wait">
+                  <span class="wait-time">32 min</span>
+                  <span class="wait-level high">High Wait</span>
+                </div>
+                <div class="result-queue">
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                  <span class="queue-dot"></span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <style>
+    /* Demo Slide Styles */
+    .demo-slide {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      padding: 0 !important;
+    }
+
+    .demo-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      gap: 4rem;
+      padding: 0 6vw;
+    }
+
+    .demo-text {
+      z-index: 10;
+    }
+
+    /* Phone Frame */
+    .demo-animation {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .phone-frame {
+      width: 320px;
+      height: 640px;
+      background: #000;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 8px 8px 0 var(--primary);
+      border: 2.5px solid var(--black);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 25px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 20;
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #F4F1DE;
+      border-radius: 35px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Demo Steps */
+    .demo-step {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      pointer-events: none;
+    }
+
+    .demo-step.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Header */
+    .demo-header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      border-bottom: 2px solid var(--black);
+    }
+
+    /* Step 1: Search Screen */
+    #step-1 {
+      padding: 1.5rem;
+    }
+
+    .demo-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--black);
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 0 var(--primary);
+    }
+
+    .demo-input-group {
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .demo-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--black);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: 'Outfit', sans-serif;
+      background: white;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-input::placeholder {
+      color: #999;
+    }
+
+    .demo-cursor {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 1rem;
+      background: var(--primary);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 49%, 100% { opacity: 1; }
+      50%, 99% { opacity: 0; }
+    }
+
+    .demo-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--primary);
+      color: white;
+      border: 2px solid var(--black);
+      border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--black);
+      transition: all 0.2s;
+    }
+
+    .demo-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 var(--black);
+    }
+
+    /* Step 2: Map View */
+    #step-2 {
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .demo-map {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .map-svg {
+      width: 100%;
+      height: 100%;
+      max-width: 280px;
+      max-height: 300px;
+    }
+
+    .marker {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .user-location {
+      filter: drop-shadow(0 0 8px rgba(212, 32, 39, 0.5));
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { r: 12; opacity: 1; }
+      50% { r: 16; opacity: 0.7; }
+    }
+
+    @keyframes pulse-orange {
+      0%, 100% { r: 12; opacity: 1; }
+      50% { r: 16; opacity: 0.7; }
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { r: 12; opacity: 1; }
+      50% { r: 16; opacity: 0.7; }
+    }
+
+    @keyframes pulse-user {
+      0%, 100% { r: 8; }
+      50% { r: 12; }
+    }
+
+    .demo-label {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #666;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Step 3: Results List */
+    #step-3 {
+      flex-direction: column;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .demo-results {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .result-card {
+      background: white;
+      border: 2px solid var(--black);
+      border-radius: 8px;
+      padding: 0.75rem;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+      font-size: 0.75rem;
+    }
+
+    .result-rank {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .result-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      color: var(--black);
+      margin-bottom: 0.25rem;
+    }
+
+    .result-distance {
+      color: #999;
+      margin-bottom: 0.25rem;
+    }
+
+    .result-status {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 0.7rem;
+    }
+
+    .result-status.open {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .result-status.closed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .result-wait {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: center;
+    }
+
+    .wait-time {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      color: var(--black);
+      font-weight: bold;
+    }
+
+    .wait-level {
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 0.65rem;
+    }
+
+    .wait-level.low {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .wait-level.moderate {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .wait-level.high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .result-queue {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .queue-dot {
+      display: inline-block;
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: queue-pulse 1.5s infinite;
+    }
+
+    .queue-dot:nth-child(2) { animation-delay: 0.2s; }
+    .queue-dot:nth-child(3) { animation-delay: 0.4s; }
+    .queue-dot:nth-child(4) { animation-delay: 0.6s; }
+    .queue-dot:nth-child(5) { animation-delay: 0.8s; }
+    .queue-dot:nth-child(6) { animation-delay: 1s; }
+    .queue-dot:nth-child(7) { animation-delay: 1.2s; }
+
+    @keyframes queue-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .demo-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 4vw;
+      }
+
+      .phone-frame {
+        width: 280px;
+        height: 560px;
+      }
+    }
+  </style>
+
+  <script>
+    // Demo animation controller
+    (function() {
+      const steps = ['step-1', 'step-2', 'step-3'];
+      let currentStep = 0;
+      const stepDuration = 4000; // 4 seconds per step
+
+      function showStep(stepIndex) {
+        steps.forEach((stepId, idx) => {
+          const element = document.getElementById(stepId);
+          if (element) {
+            element.classList.toggle('active', idx === stepIndex);
+          }
+        });
+      }
+
+      function animateDemo() {
+        showStep(currentStep);
+        currentStep = (currentStep + 1) % steps.length;
+        setTimeout(animateDemo, stepDuration);
+      }
+
+      // Start animation when slide is visible
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateDemo();
+            observer.unobserve(entry.target);
+          }
+        });
+      });
+
+      const demoSlide = document.getElementById('slide-demo');
+      if (demoSlide) {
+        observer.observe(demoSlide);
+      }
+    })();
+  </script>
+
+</section>

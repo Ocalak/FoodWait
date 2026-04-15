@@ -1,41 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FoodWait — Know Before You Queue</title>
-  <meta name="description"
-    content="Stop wasting time in food lines. FoodWait uses planetary queueing theory to predict your wait time before you leave.">
+  <title>MCR MCP — Queue Intelligence</title>
+  <meta name="description" content="Stop wasting time in food lines. MCR MCP uses planetary queueing theory to predict your wait time before you leave.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
   <style>
     /* ─── Base ──────────────────────────────────────────────────── */
-    body {
-      overflow: hidden;
-      background: var(--bg);
-    }
+    body { overflow: hidden; background: var(--bg); }
 
     .slide-container {
-      height: 100vh;
-      width: 100vw;
+      height: 100vh; width: 100vw;
       transition: transform 0.85s cubic-bezier(0.85, 0, 0.15, 1);
     }
 
     /* Each slide is a full-viewport flex row */
     .slide {
-      height: 100vh;
-      width: 100vw;
+      height: 100vh; width: 100vw;
       display: flex;
       align-items: center;
       position: relative;
       overflow: hidden;
-      background: var(--bg);
     }
 
     /* ─── Two-column layout helper ──────────────────────────────── */
@@ -53,10 +44,7 @@
       position: relative;
       z-index: 10;
     }
-
-    .col-text.right {
-      padding: 0 10vw 0 6vw;
-    }
+    .col-text.right { padding: 0 10vw 0 6vw; }
 
     /* Video column — contains a smaller card */
     .col-video {
@@ -66,59 +54,45 @@
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      mix-blend-mode: multiply;
-      filter: contrast(1.1) brightness(1.1);
     }
-
-    .col-video.left {
-      order: -1;
-    }
+    .col-video.left { order: -1; }
 
     /* The video card — constrained size */
     .vid-wrap {
       position: relative;
       width: 100%;
       max-width: 480px;
+      aspect-ratio: 1 / 1;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 2.5px solid var(--black);
+      box-shadow: 8px 8px 0 var(--black);
     }
 
     .vid-wrap video {
       width: 100%;
-      height: auto;
-      /* Mask out watermark and any hard edges */
-      mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
-      -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 95%);
+      height: 100%;
+      object-fit: cover;
+      /* Clip bottom-right corner watermark zone */
+      mask-image: radial-gradient(ellipse 92% 88% at 48% 48%, black 60%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 92% 88% at 48% 48%, black 60%, transparent 100%);
     }
 
     /* Slide-specific gradient overlays to tie text side to video */
     .slide-overlay-right {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
       background: linear-gradient(to right, var(--bg) 0%, var(--bg) 15%, transparent 55%);
     }
-
     .slide-overlay-left {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
       background: linear-gradient(to left, var(--bg) 0%, var(--bg) 15%, transparent 55%);
     }
 
     /* Float animation for video panels */
-    .col-video {
-      animation: vidFloat 18s ease-in-out infinite alternate;
-    }
-
+    .col-video { animation: vidFloat 18s ease-in-out infinite alternate; }
     @keyframes vidFloat {
-      from {
-        transform: translateY(-1.5%);
-      }
-
-      to {
-        transform: translateY(1.5%);
-      }
+      from { transform: translateY(-1.5%); }
+      to   { transform: translateY(1.5%); }
     }
 
     /* ─── Typography ────────────────────────────────────────────── */
@@ -138,21 +112,9 @@
       color: var(--black);
       margin-bottom: 1.8rem;
     }
-
-    .slide-title.xl {
-      font-size: clamp(4.5rem, 11vw, 9.5rem);
-      text-shadow: 4px 4px 0 var(--secondary);
-    }
-
-    .slide-title.lg {
-      font-size: clamp(3rem, 7vw, 6rem);
-      text-shadow: 3px 3px 0 var(--secondary);
-    }
-
-    .slide-title.accent {
-      color: var(--primary);
-      text-shadow: 3px 3px 0 var(--black);
-    }
+    .slide-title.xl { font-size: clamp(4.5rem, 11vw, 9.5rem); text-shadow: 4px 4px 0 var(--secondary); }
+    .slide-title.lg { font-size: clamp(3rem, 7vw, 6rem); text-shadow: 3px 3px 0 var(--secondary); }
+    .slide-title.accent { color: var(--primary); text-shadow: 3px 3px 0 var(--black); }
 
     .slide-body {
       font-size: 1rem;
@@ -169,7 +131,6 @@
       gap: 2.5rem;
       margin-bottom: 2.2rem;
     }
-
     .stat-num {
       font-family: var(--head);
       font-size: 2.8rem;
@@ -177,7 +138,6 @@
       text-shadow: 2px 2px 0 var(--black);
       line-height: 1;
     }
-
     .stat-label {
       font-size: 0.7rem;
       font-weight: 700;
@@ -192,192 +152,114 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 2.5rem;
-      position: relative;
-      z-index: 10;
+      position: relative; z-index: 10;
     }
-
     .steps-full::before {
       content: '';
       position: absolute;
-      top: 2.4rem;
-      left: calc(16.66% + 0.5rem);
+      top: 2.4rem; left: calc(16.66% + 0.5rem);
       width: calc(66.66% - 1rem);
       height: 2px;
       background: var(--black);
       opacity: 0.1;
     }
-
     .step-card {
       opacity: 0;
       transform: translateY(30px);
       transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
     }
-
-    .slide.active .step-card:nth-child(1) {
-      opacity: 1;
-      transform: none;
-      transition-delay: 0.15s;
-    }
-
-    .slide.active .step-card:nth-child(2) {
-      opacity: 1;
-      transform: none;
-      transition-delay: 0.3s;
-    }
-
-    .slide.active .step-card:nth-child(3) {
-      opacity: 1;
-      transform: none;
-      transition-delay: 0.45s;
-    }
-
+    .slide.active .step-card:nth-child(1) { opacity: 1; transform: none; transition-delay: 0.15s; }
+    .slide.active .step-card:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.3s; }
+    .slide.active .step-card:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.45s; }
     .step-num {
-      font-family: var(--head);
-      font-size: 4.5rem;
-      color: var(--primary);
-      text-shadow: 3px 3px 0 var(--black);
-      line-height: 1;
-      display: block;
-      margin-bottom: 1rem;
+      font-family: var(--head); font-size: 4.5rem;
+      color: var(--primary); text-shadow: 3px 3px 0 var(--black);
+      line-height: 1; display: block; margin-bottom: 1rem;
     }
-
     .step-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--black);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 48px; height: 48px;
+      background: var(--black); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
       margin-bottom: 1rem;
       box-shadow: 3px 3px 0 var(--secondary);
     }
-
-    .step-icon svg {
-      width: 22px;
-      height: 22px;
-      stroke: var(--bg);
-    }
-
+    .step-icon svg { width: 22px; height: 22px; stroke: var(--bg); }
     .step-name {
-      font-family: var(--head);
-      font-size: 1.5rem;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--black);
-      margin-bottom: 0.5rem;
+      font-family: var(--head); font-size: 1.5rem;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--black); margin-bottom: 0.5rem;
     }
-
     .step-desc {
-      font-size: 0.88rem;
-      font-weight: 500;
-      color: var(--muted);
-      line-height: 1.55;
+      font-size: 0.88rem; font-weight: 500;
+      color: var(--muted); line-height: 1.55;
     }
 
     /* ─── Abyss (Slide 2) ───────────────────────────────────────── */
     #abyssCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      pointer-events: none;
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1; pointer-events: none;
     }
-
     .abyss-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      background: linear-gradient(to top, rgba(26, 24, 20, 0.92) 0%, rgba(26, 24, 20, 0.5) 50%, rgba(26, 24, 20, 0.0) 100%);
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(to top, rgba(26,24,20,0.92) 0%, rgba(26,24,20,0.5) 50%, rgba(26,24,20,0.0) 100%);
     }
-
     .abyss-text {
-      position: relative;
-      z-index: 10;
-      text-align: center;
-      width: 100%;
+      position: relative; z-index: 10;
+      text-align: center; width: 100%;
     }
-
     .abyss-headline {
       font-family: var(--head);
       font-size: clamp(4rem, 9vw, 8rem);
       line-height: 0.88;
       color: var(--primary);
-      text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.8);
       margin-bottom: 1.2rem;
     }
-
     .abyss-stat {
       display: inline-flex;
       gap: 3rem;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 16px;
       padding: 1rem 2rem;
       margin-bottom: 2rem;
     }
-
-    .abyss-stat-item {
-      text-align: center;
-    }
-
+    .abyss-stat-item { text-align: center; }
     .abyss-stat-num {
-      font-family: var(--head);
-      font-size: 2.2rem;
-      color: var(--secondary);
-      line-height: 1;
+      font-family: var(--head); font-size: 2.2rem;
+      color: var(--secondary); line-height: 1;
     }
-
     .abyss-stat-label {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 2px; color: rgba(255,255,255,0.5);
       text-transform: uppercase;
     }
-
     /* Push content to lower portion of dark slide */
-    #slide2 {
-      justify-content: flex-end;
-      padding-bottom: 5vh;
-    }
+    #slide2 { justify-content: flex-end; padding-bottom: 5vh; }
 
     /* ─── Mission nav ────────────────────────────────────────────── */
     .mission-nav {
       position: fixed;
       bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 2rem;
+      left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 2rem;
       z-index: 1000;
-      background: rgba(244, 241, 222, 0.85);
+      background: rgba(244,241,222,0.85);
       border: var(--border);
       border-radius: 50px;
       padding: 0.6rem 1rem;
       backdrop-filter: blur(8px);
       box-shadow: var(--shadow);
     }
-
-    .slide-indicators {
-      display: flex;
-      gap: 10px;
-    }
-
+    .slide-indicators { display: flex; gap: 10px; }
     .indicator {
-      width: 10px;
-      height: 10px;
+      width: 10px; height: 10px;
       border: 2px solid var(--black);
-      border-radius: 50%;
-      background: transparent;
-      cursor: pointer;
-      padding: 0;
+      border-radius: 50%; background: transparent;
+      cursor: pointer; padding: 0;
       transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
     }
-
     .indicator.active {
       background: var(--primary);
       transform: scale(1.35);
@@ -386,177 +268,86 @@
 
     /* ─── Slide counter ─────────────────────────────────────────── */
     .slide-counter {
-      position: fixed;
-      top: 1.8rem;
-      right: 2.5rem;
-      font-family: var(--head);
-      font-size: 0.9rem;
-      color: var(--muted);
-      letter-spacing: 3px;
-      z-index: 1000;
+      position: fixed; top: 1.8rem; right: 2.5rem;
+      font-family: var(--head); font-size: 0.9rem;
+      color: var(--muted); letter-spacing: 3px; z-index: 1000;
     }
 
     /* ─── Scroll hint ────────────────────────────────────────────── */
     .scroll-hint {
-      position: fixed;
-      bottom: 5rem;
-      right: 2.2rem;
-      opacity: 0.4;
-      z-index: 1000;
+      position: fixed; bottom: 5rem; right: 2.2rem;
+      opacity: 0.4; z-index: 1000;
       animation: hintBob 2s ease-in-out infinite;
-      transition: opacity 0.4s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
+      transition: opacity 0.4s; display: flex;
+      flex-direction: column; align-items: center; gap: 5px;
     }
-
     .scroll-hint span {
-      font-family: var(--head);
-      font-size: 0.65rem;
-      letter-spacing: 2px;
-      color: var(--muted);
+      font-family: var(--head); font-size: 0.65rem;
+      letter-spacing: 2px; color: var(--muted);
       writing-mode: vertical-rl;
     }
-
-    .scroll-hint svg {
-      stroke: var(--muted);
-    }
-
-    .scroll-hint.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
+    .scroll-hint svg { stroke: var(--muted); }
+    .scroll-hint.hidden { opacity: 0; pointer-events: none; }
     @keyframes hintBob {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(6px);
-      }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
     }
 
     /* ─── Reveal animation ───────────────────────────────────────── */
     .reveal-up {
-      opacity: 0;
-      transform: translateY(24px);
+      opacity: 0; transform: translateY(24px);
       transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
     }
-
-    .slide.active .reveal-up {
-      opacity: 1;
-      transform: none;
-    }
-
-    .slide.active .reveal-up:nth-child(1) {
-      transition-delay: 0.05s;
-    }
-
-    .slide.active .reveal-up:nth-child(2) {
-      transition-delay: 0.15s;
-    }
-
-    .slide.active .reveal-up:nth-child(3) {
-      transition-delay: 0.25s;
-    }
-
-    .slide.active .reveal-up:nth-child(4) {
-      transition-delay: 0.35s;
-    }
-
-    .slide.active .reveal-up:nth-child(5) {
-      transition-delay: 0.45s;
-    }
+    .slide.active .reveal-up { opacity: 1; transform: none; }
+    .slide.active .reveal-up:nth-child(1) { transition-delay: 0.05s; }
+    .slide.active .reveal-up:nth-child(2) { transition-delay: 0.15s; }
+    .slide.active .reveal-up:nth-child(3) { transition-delay: 0.25s; }
+    .slide.active .reveal-up:nth-child(4) { transition-delay: 0.35s; }
+    .slide.active .reveal-up:nth-child(5) { transition-delay: 0.45s; }
 
     /* Planet reveal */
     .slide.active .col-video {
-      animation: vidReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards, vidFloat 18s ease-in-out 0.9s infinite alternate;
+      animation: vidReveal 0.9s cubic-bezier(0.22,1,0.36,1) forwards, vidFloat 18s ease-in-out 0.9s infinite alternate;
     }
-
     @keyframes vidReveal {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
     }
 
     /* HIW label/headline reveal */
     .hiw-kicker {
-      font-family: var(--head);
-      font-size: 0.85rem;
-      letter-spacing: 4px;
-      color: var(--primary);
-      opacity: 0;
-      transform: translateY(12px);
+      font-family: var(--head); font-size: 0.85rem;
+      letter-spacing: 4px; color: var(--primary);
+      opacity: 0; transform: translateY(12px);
       transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
-      margin-bottom: 0.8rem;
-      display: block;
+      margin-bottom: 0.8rem; display: block;
     }
-
     .hiw-title {
       font-family: var(--head);
       font-size: clamp(3rem, 7vw, 6rem);
-      line-height: 0.88;
-      color: var(--black);
+      line-height: 0.88; color: var(--black);
       text-shadow: 3px 3px 0 var(--secondary);
-      opacity: 0;
-      transform: translateY(16px);
+      opacity: 0; transform: translateY(16px);
       transition: opacity 0.55s var(--ease) 0.08s, transform 0.55s var(--ease) 0.08s;
       margin-bottom: 3rem;
     }
-
-    .slide.active .hiw-kicker {
-      opacity: 1;
-      transform: none;
-    }
-
-    .slide.active .hiw-title {
-      opacity: 1;
-      transform: none;
-    }
+    .slide.active .hiw-kicker { opacity: 1; transform: none; }
+    .slide.active .hiw-title  { opacity: 1; transform: none; }
 
     .hiw-cta {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
+      display: flex; align-items: center; gap: 1.5rem;
       margin-top: 3rem;
-      opacity: 0;
-      transition: opacity 0.5s var(--ease) 0.75s;
+      opacity: 0; transition: opacity 0.5s var(--ease) 0.75s;
     }
-
     .hiw-cta-note {
-      font-family: var(--head);
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      color: var(--muted);
+      font-family: var(--head); font-size: 0.85rem;
+      letter-spacing: 2px; color: var(--muted);
     }
 
     /* ─── Reduced motion ─────────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
-
-      .slide-container,
-      .col-video {
-        transition: none !important;
-        animation: none !important;
-      }
-
-      .reveal-up,
-      .step-card,
-      .hiw-kicker,
-      .hiw-title {
-        transition: none !important;
-        opacity: 1 !important;
-        transform: none !important;
-      }
+      .slide-container, .col-video { transition: none !important; animation: none !important; }
+      .reveal-up, .step-card, .hiw-kicker, .hiw-title { transition: none !important; opacity: 1 !important; transform: none !important; }
     }
 
     /* ─── Cosmic Plates Slide (Slide 1B) ────────────────────────── */
@@ -571,20 +362,16 @@
 
     /* Blurred ambient background behind everything */
     .plates-bg {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
+      position: absolute; inset: 0; z-index: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 60%, rgba(212, 32, 39, 0.12) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(239, 202, 82, 0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 40% at 80% 20%, rgba(100, 60, 200, 0.07) 0%, transparent 60%);
+        radial-gradient(ellipse 80% 60% at 50% 60%, rgba(212,32,39,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 20% 80%, rgba(239,202,82,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 20%, rgba(100,60,200,0.07) 0%, transparent 60%);
     }
 
     /* Ambient blurred food image behind as texture */
     .plates-bg-img {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
+      position: absolute; inset: 0; z-index: 0;
       background-size: cover;
       background-position: center;
       filter: blur(40px) brightness(0.25) saturate(1.5);
@@ -594,33 +381,27 @@
 
     /* Top label */
     .plates-top {
-      position: relative;
-      z-index: 10;
+      position: relative; z-index: 10;
       text-align: center;
       margin-bottom: 2.5vh;
     }
-
     .plates-eyebrow {
       font-family: var(--head);
       font-size: 0.85rem;
       letter-spacing: 5px;
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255,255,255,0.45);
       text-transform: uppercase;
       display: block;
       margin-bottom: 0.5rem;
     }
-
     .plates-main-title {
       font-family: var(--head);
       font-size: clamp(2.5rem, 6vw, 5rem);
       color: #fff;
       line-height: 0.9;
-      text-shadow: 0 0 40px rgba(212, 32, 39, 0.5);
+      text-shadow: 0 0 40px rgba(212,32,39,0.5);
     }
-
-    .plates-main-title span {
-      color: var(--secondary);
-    }
+    .plates-main-title span { color: var(--secondary); }
 
     /* Food name tooltip */
     .plates-tooltip {
@@ -644,12 +425,10 @@
       transition: opacity 0.35s, top 0.35s;
       z-index: 20;
     }
-
     .plates-tooltip::after {
       content: '';
       position: absolute;
-      bottom: -10px;
-      left: 50%;
+      bottom: -10px; left: 50%;
       transform: translateX(-50%);
       border: 5px solid transparent;
       border-top-color: var(--black);
@@ -661,8 +440,7 @@
       align-items: flex-end;
       justify-content: center;
       gap: clamp(1.5rem, 3vw, 3rem);
-      position: relative;
-      z-index: 10;
+      position: relative; z-index: 10;
       padding: 0 4vw;
     }
 
@@ -674,17 +452,9 @@
       transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .plate-item.side {
-      transform: translateY(40px) scale(0.78);
-    }
-
-    .plate-item.side:hover {
-      transform: translateY(30px) scale(0.82);
-    }
-
-    .plate-item.active {
-      transform: translateY(0) scale(1);
-    }
+    .plate-item.side { transform: translateY(40px) scale(0.78); }
+    .plate-item.side:hover { transform: translateY(30px) scale(0.82); }
+    .plate-item.active { transform: translateY(0) scale(1); }
 
     /* Circular image frame */
     .plate-circle {
@@ -692,45 +462,34 @@
       height: clamp(200px, 28vw, 380px);
       border-radius: 50%;
       overflow: hidden;
-      border: 3px solid rgba(255, 255, 255, 0.1);
+      border: 3px solid rgba(255,255,255,0.1);
       position: relative;
       transition: border-color 0.4s;
     }
-
     .plate-item.active .plate-circle {
       border-color: var(--secondary);
-      box-shadow: 0 0 60px rgba(239, 202, 82, 0.3), 0 30px 60px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 60px rgba(239,202,82,0.3), 0 30px 60px rgba(0,0,0,0.6);
     }
-
     .plate-item.side .plate-circle {
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
 
     .plate-circle img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
       transition: transform 12s linear;
     }
-
     .plate-item.active .plate-circle img {
       animation: plateRotate 25s linear infinite;
     }
-
     @keyframes plateRotate {
-      from {
-        transform: scale(1.05) rotate(0deg);
-      }
-
-      to {
-        transform: scale(1.05) rotate(360deg);
-      }
+      from { transform: scale(1.05) rotate(0deg); }
+      to   { transform: scale(1.05) rotate(360deg); }
     }
 
     /* Golden spinning ring on active plate */
     .plate-ring {
-      position: absolute;
-      inset: -12px;
+      position: absolute; inset: -12px;
       border-radius: 50%;
       border: 2px solid transparent;
       border-top-color: var(--secondary);
@@ -739,61 +498,42 @@
       pointer-events: none;
       transition: opacity 0.4s;
     }
-
     .plate-item.active .plate-ring {
       opacity: 1;
       animation: ringSpinCW 4s linear infinite;
     }
-
     .plate-ring-ccw {
-      position: absolute;
-      inset: -20px;
+      position: absolute; inset: -20px;
       border-radius: 50%;
       border: 1px solid transparent;
-      border-bottom-color: rgba(239, 202, 82, 0.4);
-      border-left-color: rgba(239, 202, 82, 0.4);
+      border-bottom-color: rgba(239,202,82,0.4);
+      border-left-color: rgba(239,202,82,0.4);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.4s;
     }
-
     .plate-item.active .plate-ring-ccw {
       opacity: 1;
       animation: ringSpinCCW 7s linear infinite;
     }
-
-    @keyframes ringSpinCW {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes ringSpinCCW {
-      to {
-        transform: rotate(-360deg);
-      }
-    }
+    @keyframes ringSpinCW  { to { transform: rotate(360deg); } }
+    @keyframes ringSpinCCW { to { transform: rotate(-360deg); } }
 
     /* Number badge */
     .plate-num {
       position: absolute;
-      bottom: -1.2rem;
-      right: 0.5rem;
+      bottom: -1.2rem; right: 0.5rem;
       font-family: var(--head);
       font-size: 1rem;
       color: var(--secondary);
       opacity: 0.5;
       letter-spacing: 2px;
     }
-
-    .plate-item.active .plate-num {
-      opacity: 1;
-    }
+    .plate-item.active .plate-num { opacity: 1; }
 
     /* Tag chips below active plate */
     .plates-tags {
-      position: relative;
-      z-index: 10;
+      position: relative; z-index: 10;
       margin-top: 3vh;
       display: flex;
       gap: 0.7rem;
@@ -803,61 +543,107 @@
       transform: translateY(12px);
       transition: opacity 0.5s, transform 0.5s;
     }
-
-    .slide.active .plates-tags {
-      opacity: 1;
-      transform: none;
-      transition-delay: 0.4s;
-    }
-
+    .slide.active .plates-tags { opacity: 1; transform: none; transition-delay: 0.4s; }
     .tag-chip {
       font-family: var(--head);
       font-size: 0.72rem;
       letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 99px;
       padding: 0.3rem 0.9rem;
       text-transform: uppercase;
     }
-
     .tag-chip.hot {
-      background: rgba(212, 32, 39, 0.2);
+      background: rgba(212,32,39,0.2);
       border-color: var(--primary);
       color: var(--primary);
     }
 
     /* Bottom text + CTA */
     .plates-bottom {
-      position: relative;
-      z-index: 10;
+      position: relative; z-index: 10;
       margin-top: 2.5vh;
       display: flex;
       align-items: center;
       gap: 2rem;
       justify-content: center;
     }
-
     .plates-subtitle {
       font-size: 0.9rem;
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255,255,255,0.45);
       max-width: 340px;
       text-align: center;
       line-height: 1.5;
     }
+
+    /* Demo Slide Styles */
+    .demo-slide { display: flex !important; align-items: center; justify-content: center; padding: 0 !important; }
+    .demo-container { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; align-items: center; gap: 4rem; padding: 0 6vw; }
+    .demo-text { z-index: 10; }
+    .demo-animation { display: flex; justify-content: center; align-items: center; }
+    .phone-frame { width: 320px; height: 640px; background: #000; border-radius: 40px; padding: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 8px 8px 0 var(--primary); border: 2.5px solid var(--black); position: relative; overflow: hidden; }
+    .phone-frame::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 25px; background: #000; border-radius: 0 0 20px 20px; z-index: 20; }
+    .phone-screen { width: 100%; height: 100%; background: #F4F1DE; border-radius: 35px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+    .demo-step { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; opacity: 0; transition: opacity 0.6s ease-in-out; pointer-events: none; }
+    .demo-step.active { opacity: 1; pointer-events: auto; }
+    .demo-header { background: var(--primary); color: white; padding: 1rem; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; font-weight: bold; text-align: center; border-bottom: 2px solid var(--black); }
+    #step-1 { padding: 1.5rem; }
+    .demo-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--black); margin-bottom: 1.5rem; text-shadow: 2px 2px 0 var(--primary); }
+    .demo-input-group { margin-bottom: 1rem; position: relative; }
+    .demo-input { width: 100%; padding: 0.75rem; border: 2px solid var(--black); border-radius: 8px; font-size: 0.85rem; font-family: 'Outfit', sans-serif; background: white; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1); }
+    .demo-input::placeholder { color: #999; }
+    .demo-cursor { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 2px; height: 1rem; background: var(--primary); animation: blink 1s infinite; }
+    @keyframes blink { 0%, 49%, 100% { opacity: 1; } 50%, 99% { opacity: 0; } }
+    .demo-btn { width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: 2px solid var(--black); border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 3px 3px 0 var(--black); transition: all 0.2s; }
+    .demo-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--black); }
+    #step-2 { flex-direction: column; padding: 1rem; }
+    .demo-map { flex: 1; display: flex; align-items: center; justify-content: center; margin: 1rem 0; }
+    .map-svg { width: 100%; height: 100%; max-width: 280px; max-height: 300px; }
+    .marker { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); }
+    .user-location { filter: drop-shadow(0 0 8px rgba(212, 32, 39, 0.5)); }
+    @keyframes pulse-green { 0%, 100% { r: 12; opacity: 1; } 50% { r: 16; opacity: 0.7; } }
+    @keyframes pulse-orange { 0%, 100% { r: 12; opacity: 1; } 50% { r: 16; opacity: 0.7; } }
+    @keyframes pulse-red { 0%, 100% { r: 12; opacity: 1; } 50% { r: 16; opacity: 0.7; } }
+    @keyframes pulse-user { 0%, 100% { r: 8; } 50% { r: 12; } }
+    .demo-label { text-align: center; font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    #step-3 { flex-direction: column; padding: 1rem; overflow-y: auto; }
+    .demo-results { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; padding-right: 0.5rem; }
+    .result-card { background: white; border: 2px solid var(--black); border-radius: 8px; padding: 0.75rem; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1); font-size: 0.75rem; }
+    .result-rank { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--primary); font-weight: bold; margin-bottom: 0.25rem; }
+    .result-name { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--black); margin-bottom: 0.25rem; }
+    .result-distance { color: #999; margin-bottom: 0.25rem; }
+    .result-status { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.7rem; }
+    .result-status.open { background: #d1fae5; color: #065f46; }
+    .result-status.closed { background: #fee2e2; color: #991b1b; }
+    .result-wait { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+    .wait-time { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--black); font-weight: bold; }
+    .wait-level { padding: 0.2rem 0.4rem; border-radius: 3px; font-weight: 600; font-size: 0.65rem; }
+    .wait-level.low { background: #d1fae5; color: #065f46; }
+    .wait-level.moderate { background: #fef3c7; color: #92400e; }
+    .wait-level.high { background: #fee2e2; color: #991b1b; }
+    .result-queue { display: flex; gap: 0.3rem; }
+    .queue-dot { display: inline-block; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--primary); animation: queue-pulse 1.5s infinite; }
+    .queue-dot:nth-child(2) { animation-delay: 0.2s; }
+    .queue-dot:nth-child(3) { animation-delay: 0.4s; }
+    .queue-dot:nth-child(4) { animation-delay: 0.6s; }
+    .queue-dot:nth-child(5) { animation-delay: 0.8s; }
+    .queue-dot:nth-child(6) { animation-delay: 1s; }
+    .queue-dot:nth-child(7) { animation-delay: 1.2s; }
+    @keyframes queue-pulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 1024px) { .demo-container { grid-template-columns: 1fr; gap: 2rem; padding: 2rem 4vw; } .phone-frame { width: 280px; height: 560px; } }
   </style>
 </head>
-
 <body>
 
   <div class="slide-counter" id="slideCounter">01 / 05</div>
 
   <div class="scroll-hint" id="scrollHint">
     <span>SCROLL</span>
-    <svg width="12" height="18" viewBox="0 0 12 18" fill="none" stroke-width="2" stroke-linecap="round"
-      stroke-linejoin="round">
-      <path d="M6 2v14M1 11l5 5 5-5" />
+    <svg width="12" height="18" viewBox="0 0 12 18" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 2v14M1 11l5 5 5-5"/>
     </svg>
   </div>
 
@@ -888,14 +674,14 @@
           </p>
 
           <div class="reveal-up">
-            <a href="index.html" class="btn">Launch the App →</a>
+            <a href="/app" class="btn">Launch the App →</a>
           </div>
         </div>
 
         <!-- Right: Hamburger video -->
         <div class="col-video">
           <div class="vid-wrap">
-            <video src="hero1.mp4" autoplay loop muted playsinline></video>
+            <video src="Hamburger_galaxy_rotating_202604120211.mp4" autoplay loop muted playsinline></video>
           </div>
         </div>
       </div>
@@ -964,9 +750,7 @@
 
       <!-- CTA -->
       <div class="plates-bottom">
-        <a href="index.html" class="btn reveal-up"
-          style="background:transparent; color:var(--secondary); border-color:var(--secondary); box-shadow: 3px 3px 0 var(--secondary);">Find
-          It Near You →</a>
+        <a href="/app" class="btn reveal-up" style="background:transparent; color:var(--secondary); border-color:var(--secondary); box-shadow: 3px 3px 0 var(--secondary);">Find It Near You →</a>
         <p class="plates-subtitle reveal-up">Click any food planet to explore. Know your wait before you leave.</p>
       </div>
     </section>
@@ -980,8 +764,7 @@
       <div class="abyss-overlay"></div>
 
       <div class="abyss-text reveal-up" style="padding: 0 10vw;">
-        <div class="status-badge reveal-up"
-          style="background:var(--black); color:var(--white); box-shadow:none; margin-bottom:1.5rem; display:inline-flex;">
+        <div class="status-badge reveal-up" style="background:var(--black); color:var(--white); box-shadow:none; margin-bottom:1.5rem; display:inline-flex;">
           <div class="dot" style="background:var(--red);"></div>
           <span>Problem Detected</span>
         </div>
@@ -1005,8 +788,7 @@
           </div>
         </div>
 
-        <p class="reveal-up"
-          style="color:rgba(255,255,255,0.5); font-size:1rem; font-weight:500; letter-spacing:1px; text-transform:uppercase;">
+        <p class="reveal-up" style="color:rgba(255,255,255,0.5); font-size:1rem; font-weight:500; letter-spacing:1px; text-transform:uppercase;">
           Your time belongs in the mission, not the lobby.
         </p>
       </div>
@@ -1025,20 +807,18 @@
           <span class="step-num">01</span>
           <div class="step-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
+              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
             </svg>
           </div>
           <div class="step-name">Locate</div>
-          <p class="step-desc">Share your GPS or type any city. FoodWait locks onto your coordinates instantly.</p>
+          <p class="step-desc">Share your GPS or type any city. MCR MCP locks onto your coordinates instantly.</p>
         </div>
 
         <div class="step-card">
           <span class="step-num">02</span>
           <div class="step-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </div>
           <div class="step-name">Scan</div>
@@ -1049,8 +829,7 @@
           <span class="step-num">03</span>
           <div class="step-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
             </svg>
           </div>
           <div class="step-name">Calculate</div>
@@ -1059,7 +838,7 @@
       </div>
 
       <div class="hiw-cta">
-        <a href="index.html" class="btn">Try It Free →</a>
+        <a href="/app" class="btn">Try It Free →</a>
         <span class="hiw-cta-note">NO SIGN-UP · FREE FOREVER</span>
       </div>
     </section>
@@ -1077,8 +856,7 @@
           <span class="slide-kicker reveal-up">📡 Radar: Online</span>
           <h2 class="slide-title lg reveal-up">SCAN<br>THE<br><span class="accent">QUADRANT</span></h2>
           <p class="slide-body reveal-up">
-            Search any food type — döner, ramen, pizza, burgers — within your local zone. FoodWait maps 100+ live
-            locations instantly.
+            Search any food type — döner, ramen, pizza, burgers — within your local zone. MCR MCP maps 100+ live locations instantly.
           </p>
           <div class="stat-row reveal-up">
             <div>
@@ -1094,7 +872,7 @@
               <div class="stat-label">Load time</div>
             </div>
           </div>
-          <a href="index.html" class="btn reveal-up">Initiate Scan →</a>
+          <a href="/app" class="btn reveal-up">Initiate Scan →</a>
         </div>
 
         <!-- Right: Ramen video -->
@@ -1126,8 +904,7 @@
           <span class="slide-kicker reveal-up">🔬 Engine: Active</span>
           <h2 class="slide-title lg reveal-up">COSMIC<br><span class="accent">ACCURACY</span></h2>
           <p class="slide-body reveal-up">
-            Our M/Eₖ/c queueing model runs 1,000 Monte Carlo simulations per request, giving you an 80% confidence wait
-            band — not a guess.
+            Our M/Eₖ/c queueing model runs 1,000 Monte Carlo simulations per request, giving you an 80% confidence wait band — not a guess.
           </p>
           <div class="stat-row reveal-up">
             <div>
@@ -1143,9 +920,164 @@
               <div class="stat-label">Erlang phases</div>
             </div>
           </div>
-          <a href="index.html" class="btn reveal-up">Launch Mission →</a>
+          <a href="/app" class="btn reveal-up">Launch Mission →</a>
         </div>
       </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DEMO SLIDE ── ANIMATED APP DEMONSTRATION
+         Interactive phone mockup showing search, map, and results
+    ══════════════════════════════════════════════════════════ -->
+    <section class="slide demo-slide" id="slide-demo" style="background: linear-gradient(135deg, #F4F1DE 0%, #FFF5E6 100%); flex-direction: column; position: relative; overflow: hidden;">
+      
+      <!-- Animated Demo Container -->
+      <div class="demo-container">
+        
+        <!-- Left: Text Content -->
+        <div class="demo-text">
+          <div class="status-badge reveal-up" style="margin-bottom: 1.5rem; display: inline-flex;">
+            <div class="dot" style="background: #22c55e;"></div>
+            <span>Live Demo</span>
+          </div>
+
+          <h2 class="slide-title lg reveal-up">
+            SEE IT IN<br><span style="color: var(--primary);">ACTION</span>
+          </h2>
+
+          <p class="slide-body reveal-up">
+            Watch how MCR MCP finds restaurants near you, shows real-time queue data, and helps you skip the line with accurate wait time predictions.
+          </p>
+
+          <div class="reveal-up">
+            <a href="/app" class="btn">Try It Now →</a>
+          </div>
+        </div>
+
+        <!-- Right: Animated Demo -->
+        <div class="demo-animation">
+          <div class="phone-frame">
+            <div class="phone-screen" id="demoScreen">
+              
+              <!-- Step 1: Search Screen -->
+              <div class="demo-step active" id="step-1">
+                <div class="demo-header">MCR MCP</div>
+                <div class="demo-title">Find Food Near You</div>
+                
+                <div class="demo-input-group">
+                  <input type="text" placeholder="What are you looking for?" class="demo-input" id="searchInput" value="">
+                  <div class="demo-cursor"></div>
+                </div>
+                
+                <div class="demo-input-group">
+                  <input type="text" placeholder="Enter city..." class="demo-input" value="">
+                </div>
+                
+                <button class="demo-btn">SEARCH</button>
+              </div>
+
+              <!-- Step 2: Map View -->
+              <div class="demo-step" id="step-2">
+                <div class="demo-header">MCR MCP</div>
+                <div class="demo-map">
+                  <svg viewBox="0 0 300 400" class="map-svg">
+                    <!-- Map background -->
+                    <rect width="300" height="400" fill="#E8F4F8"/>
+                    
+                    <!-- Map markers with animations -->
+                    <circle cx="80" cy="100" r="12" fill="#22c55e" class="marker marker-green" style="animation: pulse-green 2s infinite;"/>
+                    <text x="80" y="105" text-anchor="middle" font-size="8" fill="white" font-weight="bold">8m</text>
+                    
+                    <circle cx="150" cy="150" r="12" fill="#f97316" class="marker marker-orange" style="animation: pulse-orange 2s infinite 0.3s;"/>
+                    <text x="150" y="155" text-anchor="middle" font-size="8" fill="white" font-weight="bold">18m</text>
+                    
+                    <circle cx="220" cy="200" r="12" fill="#ef4444" class="marker marker-red" style="animation: pulse-red 2s infinite 0.6s;"/>
+                    <text x="220" y="205" text-anchor="middle" font-size="8" fill="white" font-weight="bold">32m</text>
+                    
+                    <circle cx="100" cy="280" r="12" fill="#22c55e" class="marker marker-green" style="animation: pulse-green 2s infinite 0.9s;"/>
+                    <text x="100" y="285" text-anchor="middle" font-size="8" fill="white" font-weight="bold">5m</text>
+                    
+                    <circle cx="200" cy="320" r="12" fill="#f97316" class="marker marker-orange" style="animation: pulse-orange 2s infinite 1.2s;"/>
+                    <text x="200" y="325" text-anchor="middle" font-size="8" fill="white" font-weight="bold">24m</text>
+                    
+                    <!-- User location -->
+                    <circle cx="150" cy="200" r="8" fill="#D42027" stroke="#fff" stroke-width="2" class="user-location" style="animation: pulse-user 1.5s infinite;"/>
+                  </svg>
+                </div>
+                <div class="demo-label">30 restaurants found</div>
+              </div>
+
+              <!-- Step 3: Results List -->
+              <div class="demo-step" id="step-3">
+                <div class="demo-header">MCR MCP</div>
+                <div class="demo-results">
+                  
+                  <!-- Result 1 -->
+                  <div class="result-card" style="animation: slideIn 0.5s ease-out;">
+                    <div class="result-rank">#1</div>
+                    <div class="result-name">Tofu Vegan</div>
+                    <div class="result-distance">0.2 km</div>
+                    <div class="result-status open">✓ Open now</div>
+                    <div class="result-wait">
+                      <span class="wait-time">8 min</span>
+                      <span class="wait-level low">Low Wait</span>
+                    </div>
+                    <div class="result-queue">
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                    </div>
+                  </div>
+
+                  <!-- Result 2 -->
+                  <div class="result-card" style="animation: slideIn 0.5s ease-out 0.2s both;">
+                    <div class="result-rank">#2</div>
+                    <div class="result-name">Kebab House</div>
+                    <div class="result-distance">0.5 km</div>
+                    <div class="result-status open">✓ Open now</div>
+                    <div class="result-wait">
+                      <span class="wait-time">18 min</span>
+                      <span class="wait-level moderate">Moderate</span>
+                    </div>
+                    <div class="result-queue">
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                    </div>
+                  </div>
+
+                  <!-- Result 3 -->
+                  <div class="result-card" style="animation: slideIn 0.5s ease-out 0.4s both;">
+                    <div class="result-rank">#3</div>
+                    <div class="result-name">Pizza Place</div>
+                    <div class="result-distance">0.8 km</div>
+                    <div class="result-status closed">✕ Closes in 2h</div>
+                    <div class="result-wait">
+                      <span class="wait-time">32 min</span>
+                      <span class="wait-level high">High Wait</span>
+                    </div>
+                    <div class="result-queue">
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                      <span class="queue-dot"></span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </section>
 
   </div><!-- /slide-container -->
@@ -1159,18 +1091,19 @@
       <button class="indicator" data-slide="3" aria-label="Slide 4: How It Works" type="button"></button>
       <button class="indicator" data-slide="4" aria-label="Slide 5: Scan" type="button"></button>
       <button class="indicator" data-slide="5" aria-label="Slide 6: Accuracy" type="button"></button>
+      <button class="indicator" data-slide="6" aria-label="Slide 7: Live Demo" type="button"></button>
     </div>
-    <a href="index.html" class="btn" style="padding:0.5rem 1.2rem; font-size:0.85rem;">Launch App →</a>
+    <a href="/app" class="btn" style="padding:0.5rem 1.2rem; font-size:0.85rem;">Launch App →</a>
   </div>
 
   <script>
-    const container = document.getElementById('slideContainer');
-    const indicators = document.querySelectorAll('.indicator');
-    const slides = document.querySelectorAll('.slide');
-    const counter = document.getElementById('slideCounter');
-    const scrollHint = document.getElementById('scrollHint');
-    let current = 0;
-    let transitioning = false;
+    const container     = document.getElementById('slideContainer');
+    const indicators    = document.querySelectorAll('.indicator');
+    const slides        = document.querySelectorAll('.slide');
+    const counter       = document.getElementById('slideCounter');
+    const scrollHint    = document.getElementById('scrollHint');
+    let current         = 0;
+    let transitioning   = false;
 
     function goTo(idx) {
       if (idx < 0 || idx >= slides.length || transitioning) return;
@@ -1218,13 +1151,13 @@
     indicators.forEach(btn => btn.addEventListener('click', () => goTo(+btn.dataset.slide)));
 
     // ── Abyss Canvas Renderer ──────────────────────────────────────
-    (function () {
+    (function() {
       const canvas = document.getElementById('abyssCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
 
       function resize() {
-        canvas.width = canvas.offsetWidth || window.innerWidth;
+        canvas.width  = canvas.offsetWidth  || window.innerWidth;
         canvas.height = canvas.offsetHeight || window.innerHeight;
       }
       resize();
@@ -1236,8 +1169,8 @@
         const headR = size * 0.13;
         const bodyW = size * 0.28;
         const bodyH = size * 0.36;
-        const legH = size * 0.34;
-        const armW = Math.max(1, size * 0.07);
+        const legH  = size * 0.34;
+        const armW  = Math.max(1, size * 0.07);
 
         ctx.save();
         ctx.globalAlpha = Math.min(alpha, 0.95);
@@ -1384,15 +1317,15 @@
     })();
 
     // ── Cosmic Plates Carousel ─────────────────────────────────────
-    (function () {
+    (function() {
       const plates = document.querySelectorAll('.plate-item');
-      const bgImg = document.getElementById('platesBgImg');
+      const bgImg  = document.getElementById('platesBgImg');
       const tagsEl = document.getElementById('platesTags');
 
       const DATA = [
-        { name: 'COSMIC DÖNER', img: 'kebab_planet_1775951523618.png', tags: ['Grilled', 'Legendary', 'Fast'] },
-        { name: 'PIZZA NEBULA', img: 'pizza_galaxy_1775951547403.png', tags: ['Crispy', 'Cosmic', 'Classic'] },
-        { name: 'RAMEN NEBULA', img: 'noodle_nebula_1775951564639.png', tags: ['Steamy', 'Deep', 'Umami'] }
+        { name: 'COSMIC DÖNER',  img: 'kebab_planet_1775951523618.png',    tags: ['Grilled', 'Legendary', 'Fast'] },
+        { name: 'PIZZA NEBULA',  img: 'pizza_galaxy_1775951547403.png',    tags: ['Crispy', 'Cosmic', 'Classic'] },
+        { name: 'RAMEN NEBULA',  img: 'noodle_nebula_1775951564639.png',   tags: ['Steamy', 'Deep', 'Umami'] }
       ];
 
       let autoTimer;
@@ -1407,7 +1340,7 @@
           const tip = pl.querySelector('.plates-tooltip');
           if (tip) {
             tip.style.opacity = isActive ? '1' : '0';
-            tip.style.top = isActive ? '-4.2rem' : '-3.5rem';
+            tip.style.top     = isActive ? '-4.2rem' : '-3.5rem';
           }
         });
 
@@ -1450,5 +1383,39 @@
     })();
   </script>
 </body>
-
 </html>
+
+    // Demo animation controller
+    (function() {
+      const steps = ['step-1', 'step-2', 'step-3'];
+      let currentStep = 0;
+      const stepDuration = 4000;
+
+      function showStep(stepIndex) {
+        steps.forEach((stepId, idx) => {
+          const element = document.getElementById(stepId);
+          if (element) {
+            element.classList.toggle('active', idx === stepIndex);
+          }
+        });
+      }
+
+      function animateDemo() {
+        showStep(currentStep);
+        currentStep = (currentStep + 1) % steps.length;
+        setTimeout(animateDemo, stepDuration);
+      }
+
+      const demoSlide = document.getElementById('slide-demo');
+      if (demoSlide) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              animateDemo();
+              observer.unobserve(entry.target);
+            }
+          });
+        });
+        observer.observe(demoSlide);
+      }
+    })();
