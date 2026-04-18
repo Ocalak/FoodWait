@@ -7,6 +7,8 @@ import MapComponent from '@/components/MapComponent';
 import ReservationForm, { type Reservation } from '@/components/ReservationForm';
 import { useFavorites } from '@/hooks/useFavorites';
 import { isRestaurantOpen, parseOsmHours, type OpeningHours } from '@/lib/timeUtils';
+import { simulateWait } from '@/lib/simulation';
+import QuickEstimateToggle, { type EstimateMode } from '@/components/QuickEstimateToggle';
 
 export interface Review {
   id: string;
@@ -25,6 +27,7 @@ export interface Shop {
   lon: number;
   distance: number;
   waitTime?: number;
+  waitRange?: { p10: number; p90: number };
   queueLength?: number;
   hours?: OpeningHours;
   orderingUrl?: string;
@@ -32,6 +35,7 @@ export interface Shop {
   rating: number;
   reviewCount: number;
   reviews: Review[];
+  prepMins?: number; // Persisted for reactive simulation
 }
 
 const FOOD_CHIPS = [
@@ -62,7 +66,7 @@ function FoodCarousel({ value, onChange }: { value: string; onChange: (v: string
       <button
         onClick={scrollPrev}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center rounded-full transition-all hover:scale-110"
-        style={{ marginLeft: -10, background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}
+        style={{ marginLeft: -10, background: 'rgba(0,0,0,0.05)', border: '1.5px solid rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.4)' }}
       >
         <ChevronLeft className="w-3.5 h-3.5" />
       </button>
@@ -78,9 +82,9 @@ function FoodCarousel({ value, onChange }: { value: string; onChange: (v: string
                 onClick={() => onChange(chip.label)}
                 className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border-2 font-black text-sm uppercase tracking-wider transition-all"
                 style={{
-                  background: active ? 'var(--primary)' : 'rgba(255,255,255,0.07)',
-                  color: active ? 'white' : 'rgba(255,255,255,0.6)',
-                  border: active ? '2px solid var(--primary)' : '2px solid rgba(255,255,255,0.1)',
+                  background: active ? 'var(--primary)' : 'rgba(0,0,0,0.03)',
+                  color: active ? 'white' : 'rgba(0,0,0,0.5)',
+                  border: active ? '2px solid var(--primary)' : '2px solid rgba(0,0,0,0.07)',
                   boxShadow: active ? '0 4px 16px rgba(212,32,39,0.35)' : 'none',
                   transform: active ? 'translateY(-1px)' : 'none',
                 }}
@@ -97,7 +101,7 @@ function FoodCarousel({ value, onChange }: { value: string; onChange: (v: string
       <button
         onClick={scrollNext}
         className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center rounded-full transition-all hover:scale-110"
-        style={{ marginRight: -10, background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}
+        style={{ marginRight: -10, background: 'rgba(0,0,0,0.05)', border: '1.5px solid rgba(0,0,0,0.1)', color: 'rgba(0,0,0,0.4)' }}
       >
         <ChevronRight className="w-3.5 h-3.5" />
       </button>
@@ -118,6 +122,17 @@ export default function Home() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Shop | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [estimateMode, setEstimateMode] = useState<EstimateMode>('moderate');
+
+  // Mapping estimate mode to simulation params
+  const getSimulationParams = (mode: EstimateMode) => {
+    switch (mode) {
+      case 'quiet':    return { arrivalRate: 1, staff: 3 };
+      case 'moderate': return { arrivalRate: 3, staff: 2 };
+      case 'busy':     return { arrivalRate: 6, staff: 1 }; // High busy
+      default:         return { arrivalRate: 3, staff: 2 };
+    }
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('mcr_mcp_reservations');
@@ -131,6 +146,24 @@ export default function Home() {
       localStorage.setItem('mcr_mcp_reservations', JSON.stringify(reservations));
     }
   }, [reservations]);
+
+  // Reactive wait-time updates when crowd level toggle is flipped
+  useEffect(() => {
+    if (shops.length === 0) return;
+    
+    const { arrivalRate, staff } = getSimulationParams(estimateMode);
+    
+    setShops(prev => prev.map(shop => {
+      const q = shop.queueLength || 0;
+      const p = shop.prepMins || 10;
+      const sim = simulateWait(q, staff, p, arrivalRate);
+      return {
+        ...shop,
+        waitTime: sim.mean,
+        waitRange: { p10: sim.p10, p90: sim.p90 }
+      };
+    }));
+  }, [estimateMode]);
 
   const generateHours = (): OpeningHours => {
     const openHour = Math.floor(Math.random() * 4) + 7;  // 07:00 – 10:00
@@ -176,7 +209,30 @@ export default function Home() {
           const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
           const rawOsm = f.properties.opening_hours || f.properties.datasource?.raw?.opening_hours;
           const hours = (rawOsm ? parseOsmHours(rawOsm) : null) ?? generateHours();
-          return { id: `shop-${idx}`, name: restaurantName, address: f.properties.formatted || 'Nearby', lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], distance: f.properties.distance || 0, waitTime: Math.floor(Math.random() * 25) + 5, queueLength: Math.floor(Math.random() * 15), hours, orderingUrl: url, orderingPlatforms: platforms, rating: parseFloat(avgRating.toFixed(1)), reviewCount: reviews.length, reviews };
+          
+          const { arrivalRate, staff } = getSimulationParams(estimateMode);
+          const queueSize = Math.floor(Math.random() * 8) + (estimateMode === 'busy' ? 10 : 0);
+          const prepMins = Math.floor(Math.random() * 10) + 5;
+          const sim = simulateWait(queueSize, staff, prepMins, arrivalRate);
+
+          return { 
+            id: `shop-${idx}`, 
+            name: restaurantName, 
+            address: f.properties.formatted || 'Nearby', 
+            lat: f.geometry.coordinates[1], 
+            lon: f.geometry.coordinates[0], 
+            distance: f.properties.distance || 0, 
+            waitTime: sim.mean,
+            waitRange: { p10: sim.p10, p90: sim.p90 },
+            queueLength: queueSize,
+            prepMins,
+            hours, 
+            orderingUrl: url, 
+            orderingPlatforms: platforms, 
+            rating: parseFloat(avgRating.toFixed(1)), 
+            reviewCount: reviews.length, 
+            reviews 
+          };
         });
         setShops(shopList);
         setHasSearched(true);
@@ -222,11 +278,11 @@ export default function Home() {
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
 
       {/* ── Top Nav ── */}
-      <header className="sticky top-0 z-40 border-b-2 border-black" style={{ background: 'var(--background)' }}>
-        <div className="w-full flex items-center justify-between h-16" style={{ paddingLeft: '3cm', paddingRight: '1cm' }}>
+      <header className="sticky top-0 z-40 border-b-2 border-black" style={{ background: 'var(--background)', paddingLeft: '4cm', paddingRight: '3cm' }}>
+        <div className="flex items-center justify-between h-16">
           <button onClick={() => setLocation('/')} className="flex items-center gap-2 font-beb text-2xl uppercase tracking-widest text-foreground hover:text-primary transition-colors">
             <ArrowLeft className="w-5 h-5" />
-            FOODWAIT
+            QBite
           </button>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -235,42 +291,54 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="w-full py-8" style={{ paddingLeft: '3cm', paddingRight: '1cm' }}>
+      <main style={{ paddingLeft: '4cm', paddingRight: '3cm', paddingTop: '2.5rem', paddingBottom: '3rem' }}>
 
         {/* ── Search Panel ── */}
         <div className="mb-12">
 
-          {/* Headline */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--primary)' }} />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Queue Intelligence Active</span>
-            </div>
-            <h1 className="font-beb text-[clamp(2.2rem,5vw,4rem)] uppercase leading-none text-foreground">
-              Find Food Near You
+          <div className="flex flex-col gap-6">
+            <h1 className="font-beb text-[clamp(2.5rem,6vw,5.5rem)] uppercase leading-none text-foreground tracking-tight">
+              Queue Intelligence Search
             </h1>
+            <p className="text-sm font-bold uppercase tracking-widest text-muted">
+              Real-time crowd simulation for local spots. 
+              Find the shortest queue in seconds.
+            </p>
           </div>
 
-          {/* Dark premium search card */}
-          <div className="rounded-3xl" style={{ background: '#0f0f0f', padding: '2.5cm 2cm' }}>
+          {/* Free-floating search section */}
+          <div className="py-8">
 
             {/* Craving label + carousel */}
-            <div className="mb-8">
-              <p className="text-xs font-black uppercase tracking-[0.3em] mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                What are you craving?
+              <p className="text-xs font-black uppercase tracking-[0.3em] mb-4 text-black/40">
+                1. What are you craving?
               </p>
               <FoodCarousel value={foodType} onChange={setFoodType} />
+            
+
+            {/* Quick Estimate / Simulation Mode Selection */}
+            <div className="mb-8">
+              <p className="text-xs font-black uppercase tracking-[0.3em] mb-4 text-black/40">
+                2. Real-time crowd level
+              </p>
+              <div className="w-full">
+                <QuickEstimateToggle value={estimateMode} onChange={setEstimateMode} />
+              </div>
             </div>
 
             {/* Divider */}
-            <div className="h-px mb-8" style={{ background: 'rgba(255,255,255,0.07)' }} />
+            <div className="h-px mb-8" style={{ background: 'rgba(0,0,0,0.07)' }} />
 
             {/* Inputs row */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-6">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-black/40">
+                3. Final details
+              </p>
+              <div className="flex flex-col md:flex-row gap-4">
 
               {/* Food input */}
               <div className="relative flex-1">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6" style={{ color: 'rgba(255,255,255,0.25)' }} />
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-black/20" />
                 <input
                   type="text"
                   placeholder="Pizza, kebab, sushi…"
@@ -282,19 +350,20 @@ export default function Home() {
                     paddingLeft: '3.5rem', paddingRight: '1.5rem',
                     paddingTop: '1.2rem', paddingBottom: '1.2rem',
                     fontSize: '1.1rem',
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1.5px solid rgba(255,255,255,0.1)',
-                    color: 'white',
+                    background: 'white',
+                    border: '1.5px solid rgba(0,0,0,0.1)',
+                    color: '#0A0A0A',
                     caretColor: 'var(--primary)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                   }}
                   onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                  onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onBlur={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'}
                 />
               </div>
 
               {/* City input */}
               <div className="relative flex-1">
-                <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6" style={{ color: 'rgba(255,255,255,0.25)' }} />
+                <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-black/20" />
                 <input
                   type="text"
                   placeholder="City name…"
@@ -306,13 +375,14 @@ export default function Home() {
                     paddingLeft: '3.5rem', paddingRight: '1.5rem',
                     paddingTop: '1.2rem', paddingBottom: '1.2rem',
                     fontSize: '1.1rem',
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1.5px solid rgba(255,255,255,0.1)',
-                    color: 'white',
+                    background: 'white',
+                    border: '1.5px solid rgba(0,0,0,0.1)',
+                    color: '#0A0A0A',
                     caretColor: 'var(--primary)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                   }}
                   onFocus={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                  onBlur={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+                  onBlur={e => e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'}
                 />
               </div>
 
@@ -325,9 +395,10 @@ export default function Home() {
                   paddingLeft: '1.8rem', paddingRight: '1.8rem',
                   paddingTop: '1.2rem', paddingBottom: '1.2rem',
                   fontSize: '0.95rem',
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1.5px solid rgba(255,255,255,0.12)',
-                  color: 'rgba(255,255,255,0.7)',
+                  background: 'white',
+                  border: '1.5px solid rgba(0,0,0,0.12)',
+                  color: '#0A0A0A',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                 }}
               >
                 {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Navigation className="w-6 h-6" />}
@@ -359,6 +430,7 @@ export default function Home() {
                 <p className="text-sm font-bold text-red-400">{error}</p>
               </div>
             )}
+           </div>
           </div>
         </div>
 
@@ -375,12 +447,12 @@ export default function Home() {
         {!loading && shops.length > 0 && (() => {
           const openShops = shops.filter(s => !s.hours || isRestaurantOpen(s.hours).isOpen);
           return (
-            <div className="flex flex-col xl:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-12">
 
               {/* Map */}
-              <div className="xl:w-[520px] flex-shrink-0">
+              <div className="lg:w-[500px] xl:w-[680px] flex-shrink-0">
                 <div className="sticky top-24">
-                  <div className="rounded-2xl overflow-hidden h-[420px] xl:h-[620px]">
+                  <div className="rounded-2xl overflow-hidden h-[300px] sm:h-[420px] lg:h-[620px]">
                     <MapComponent
                       shops={openShops}
                       userLocation={userLocation}

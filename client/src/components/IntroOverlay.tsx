@@ -86,7 +86,13 @@ export default function IntroOverlay({ onFinish, onSkip }: IntroOverlayProps) {
           </div>
 
           <div className="flex items-center justify-between">
-            <p className="text-white/50 text-[10px] font-black uppercase tracking-widest">How QBite works</p>
+            <div className="flex flex-col">
+              <p className="text-white/50 text-[10px] font-black uppercase tracking-widest leading-none mb-1">How QBite works</p>
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-white text-[9px] font-bold uppercase tracking-wider">Live Queue Intel Connected</p>
+              </div>
+            </div>
             <AnimatePresence>
               {canSkip && (
                 <motion.button
@@ -94,9 +100,9 @@ export default function IntroOverlay({ onFinish, onSkip }: IntroOverlayProps) {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   onClick={onSkip}
-                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white border border-white/20 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors"
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-black border-2 border-black bg-secondary px-4 py-2 rounded-xl transition-all hover:-translate-y-0.5 shadow-[2px_2px_0_#000]"
                 >
-                  Skip to App <SkipForward className="w-3 h-3" />
+                  Enter App <SkipForward className="w-3 h-3" />
                 </motion.button>
               )}
             </AnimatePresence>

@@ -24,22 +24,28 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
 /* ── Floating food collage ── */
 function FoodCollage() {
   const items = [
-    { src: '/pizza_galaxy_1775951547403.png',    size: 220, x: '12%',  y: '8%',  rotate: -10, delay: 0,   isVideo: false },
-    { src: '/noodle_nebula_1775951564639.png',   size: 190, x: '58%',  y: '2%',  rotate: 14,  delay: 0.15, isVideo: false },
-    { src: '/kebab_planet_1775951523618.png',    size: 210, x: '48%',  y: '52%', rotate: -6,  delay: 0.3,  isVideo: false },
+    { src: '/pizza_galaxy_1775951547403.png',    x: '5%',   y: '10%',  rotate: -10, delay: 0 },
+    { src: '/noodle_nebula_1775951564639.png',   x: '55%',  y: '5%',   rotate: 14,  delay: 0.15 },
+    { src: '/kebab_planet_1775951523618.png',    x: '25%',  y: '45%',  rotate: -6,  delay: 0.3 },
   ];
   return (
-    <div className="relative w-full h-[480px] md:h-[560px]">
+    <div className="relative w-full aspect-square md:aspect-auto md:h-[560px]">
       {items.map((item, i) => (
         <motion.div key={i}
           initial={{ opacity: 0, scale: 0.75, rotate: item.rotate - 12 }}
           animate={{ opacity: 1, scale: 1, rotate: item.rotate }}
           transition={{ duration: 1.3, delay: item.delay, ease }}
           whileHover={{ scale: 1.06, rotate: item.rotate * 0.5, transition: { duration: 0.3 } }}
-          style={{ position: 'absolute', left: item.x, top: item.y, width: item.size, height: item.size }}
+          style={{ 
+            position: 'absolute', 
+            left: item.x, 
+            top: item.y, 
+            width: 'clamp(140px, 20vw, 220px)', 
+            height: 'clamp(140px, 20vw, 220px)',
+            zIndex: i === 2 ? 20 : 10
+          }}
         >
-          <div className="w-full h-full rounded-full border-[3px] border-black bg-white overflow-hidden"
-            style={{ boxShadow: '6px 6px 0 rgba(0,0,0,0.12)' }}>
+          <div className="w-full h-full rounded-full border-[3px] border-black bg-white overflow-hidden shadow-[6px_6px_0_rgba(0,0,0,0.12)]">
             {item.isVideo
               ? <video src={item.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
               : <img src={item.src} alt="" className="w-full h-full object-cover" />
@@ -142,7 +148,7 @@ export default function Landing() {
       </AnimatePresence>
 
       {/* ── HERO ── */}
-      <section className="w-full pt-16 pb-16 overflow-hidden" style={{ paddingLeft: '4cm', paddingRight: '2rem' }}>
+      <section className="w-full pt-8 md:pt-16 pb-16 overflow-hidden px-4 md:px-8 lg:px-16 xl:px-32">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-0">
 
           {/* Left: copy */}
@@ -216,7 +222,7 @@ export default function Landing() {
       </div>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="w-full pt-24 pb-36" style={{ background: '#FAFAF8', paddingLeft: '4cm', paddingRight: '2rem' }}>
+      <section className="w-full pt-20 pb-36 px-4 md:px-8 lg:px-16 xl:px-32" style={{ background: '#FAFAF8' }}>
         <div className="max-w-6xl mx-auto">
           <FadeUp className="mb-14">
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-400 mb-3">Simple · Fast · Free</p>
@@ -262,7 +268,7 @@ export default function Landing() {
 
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-20">
           {/* Copy */}
-          <div className="flex-1 text-white order-2 lg:order-1" style={{ paddingLeft: '4cm' }}>
+          <div className="flex-1 text-white order-2 lg:order-1 px-4 md:px-8 lg:px-16 xl:pl-32">
             <FadeUp>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-6">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -327,8 +333,8 @@ export default function Landing() {
       </section>
 
       {/* ── CTA FOOTER ── */}
-      <section className="w-full py-28 border-t-2 border-black"
-        style={{ background: 'var(--primary)', paddingLeft: '4cm', paddingRight: '2rem' }}>
+      <section className="w-full py-28 border-t-2 border-black px-4 md:px-8 lg:px-16 xl:px-32"
+        style={{ background: 'var(--primary)' }}>
         <FadeUp delay={0.1}>
           <h2 className="font-beb uppercase leading-none tracking-wide mb-5 text-white"
             style={{ fontSize: 'clamp(3rem,10vw,7rem)', textShadow: '4px 4px 0 rgba(0,0,0,0.15)' }}>

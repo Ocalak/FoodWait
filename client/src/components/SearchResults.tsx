@@ -11,6 +11,7 @@ interface Shop {
   address: string;
   distance: number;
   waitTime?: number;
+  waitRange?: { p10: number; p90: number };
   queueLength?: number;
   hours?: OpeningHours;
   orderingUrl?: string;
@@ -133,13 +134,13 @@ export default function SearchResults({ shops, favorites = [], onToggleFavorite,
                 {/* Wait time pill */}
                 {!isClosed && shop.waitTime !== undefined && (
                   <div
-                    className="flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border-2 min-w-[64px]"
+                    className="flex-shrink-0 flex flex-col items-center px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 min-w-[58px] sm:min-w-[64px]"
                     style={{ background: wc.bg, borderColor: wc.border }}
                   >
-                    <span className="font-black text-xl leading-none" style={{ color: wc.text }}>
-                      {shop.waitTime}
+                    <span className="font-black text-sm sm:text-xl leading-none" style={{ color: wc.text }}>
+                      {shop.waitRange ? `${shop.waitRange.p10}-${shop.waitRange.p90}` : shop.waitTime}
                     </span>
-                    <span className="text-[9px] font-black uppercase tracking-wide mt-0.5" style={{ color: wc.text }}>
+                    <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wide mt-0.5" style={{ color: wc.text }}>
                       min
                     </span>
                   </div>
@@ -174,10 +175,17 @@ export default function SearchResults({ shops, favorites = [], onToggleFavorite,
                     {/* Detailed wait */}
                     {!isClosed && shop.waitTime !== undefined && (
                       <div className="p-3 rounded-xl border-2" style={{ background: wc.bg, borderColor: wc.border }}>
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: wc.text }}>Est. Wait</p>
-                        <div className="flex items-baseline gap-1">
-                          <span className="font-black text-2xl leading-none" style={{ color: wc.text }}>{shop.waitTime}</span>
-                          <span className="text-xs font-bold" style={{ color: wc.text }}>min · {wc.label}</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: wc.text }}>90% Confidence Band</p>
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-baseline gap-1">
+                            <span className="font-black text-xl sm:text-2xl leading-none" style={{ color: wc.text }}>
+                              {shop.waitRange ? `${shop.waitRange.p10} - ${shop.waitRange.p90}` : shop.waitTime}
+                            </span>
+                            <span className="text-[10px] sm:text-xs font-bold" style={{ color: wc.text }}>min</span>
+                          </div>
+                          <p className="text-[9px] font-bold uppercase tracking-wide opacity-70" style={{ color: wc.text }}>
+                            {wc.label} · Markov simulation
+                          </p>
                         </div>
                       </div>
                     )}
