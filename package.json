@@ -2,8 +2,11 @@
   "name": "mcr-mcp-foodwait",
   "version": "1.0.0",
   "type": "module",
-  "packageManager": "pnpm@10.15.1",
+  "packageManager": "pnpm@9.15.4",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "pnpm": {
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
@@ -85,7 +88,7 @@
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
     "esbuild": "^0.25.0",
-    "pnpm": "^10.15.1",
+    "pnpm": "^9.15.4",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.14",
