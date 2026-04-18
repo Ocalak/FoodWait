@@ -165,6 +165,19 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("rehype") || id.includes("remark") || id.includes("unified")) {
+              return "rehype-vendor";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   server: {
     port: 3000,
