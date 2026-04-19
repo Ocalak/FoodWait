@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@layer utilities {
+  .font-beb {
+    font-family: 'Bebas Neue', 'Outfit', sans-serif;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -43,40 +49,50 @@
 }
 
 :root {
-  /* Landing.html Design System - Planetono Colors */
-  --primary: #D42027; /* Planetono Red */
-  --primary-foreground: #F4F1DE;
-  --secondary: #EFCA52; /* Planetono Yellow */
-  --secondary-foreground: #0A0A0A;
-  --accent: #D42027;
-  --accent-foreground: #F4F1DE;
-  --sidebar-primary: #D42027;
-  --sidebar-primary-foreground: #F4F1DE;
-  --chart-1: #D42027;
-  --chart-2: #EFCA52;
-  --chart-3: #0A0A0A;
-  --chart-4: #E8E4DF;
-  --chart-5: #555;
-  --radius: 0.75rem;
-  --background: #F4F1DE; /* Planetono Cream */
-  --foreground: #0A0A0A; /* Black */
-  --card: #FFFFFF;
-  --card-foreground: #0A0A0A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0A0A0A;
-  --muted: #555;
-  --muted-foreground: #555;
-  --destructive: #ef4444;
+  /* ── Landing (editorial) tokens ───────────────────────── */
+  --landing-bg:        #FAFAF7;
+  --landing-fg:        #1A1A1A;
+  --landing-fg-muted:  #6B6B6B;
+  --landing-fg-subtle: #9B9B9B;
+  --landing-accent:    #C44536;   /* muted terracotta */
+  --landing-mustard:   #C9A961;   /* muted ochre */
+  --landing-border:    rgba(0,0,0,0.08);
+  --landing-surface:   #FFFFFF;
+
+  /* ── App (/app route) tokens — kept for Home.tsx ─────── */
+  --primary:             #C44536;
+  --primary-foreground:  #FFFFFF;
+  --secondary:           #C9A961;
+  --secondary-foreground:#1A1A1A;
+  --accent:              #C44536;
+  --accent-foreground:   #FFFFFF;
+  --radius:              0.75rem;
+  --background:          #FAFAF7;
+  --foreground:          #1A1A1A;
+  --card:                #FFFFFF;
+  --card-foreground:     #1A1A1A;
+  --popover:             #FFFFFF;
+  --popover-foreground:  #1A1A1A;
+  --muted:               #6B6B6B;
+  --muted-foreground:    #6B6B6B;
+  --destructive:         #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #E8E4DF;
-  --input: #FFFFFF;
-  --ring: #D42027;
-  --sidebar: #F4F1DE;
-  --sidebar-foreground: #0A0A0A;
-  --sidebar-accent: #EFCA52;
-  --sidebar-accent-foreground: #0A0A0A;
-  --sidebar-border: #E8E4DF;
-  --sidebar-ring: #D42027;
+  --border:              #E8E4E0;
+  --input:               #FFFFFF;
+  --ring:                #C44536;
+  --sidebar:             #FAFAF7;
+  --sidebar-foreground:  #1A1A1A;
+  --sidebar-primary:     #C44536;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent:      #C9A961;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border:      #E8E4E0;
+  --sidebar-ring:        #C44536;
+  --chart-1: #C44536;
+  --chart-2: #C9A961;
+  --chart-3: #1A1A1A;
+  --chart-4: #E8E4E0;
+  --chart-5: #6B6B6B;
 }
 
 * {
@@ -85,11 +101,21 @@
 
 body {
   @apply bg-background text-foreground;
-  font-family: 'Outfit', system-ui, sans-serif;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(239, 202, 82, 0.35), transparent 38%),
-    radial-gradient(circle at 85% 10%, rgba(212, 32, 39, 0.15), transparent 40%),
-    var(--background);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--background);
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+  }
+  .font-sans-ui {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 button:not(:disabled),
