@@ -72,8 +72,14 @@ function useLiveCount(seed = 247) {
 
 // ─── Live wait times that tick subtly ─────────────────────────
 type WaitRow = { label: string; wait: number };
-function useLiveWaits(initial: WaitRow[]) {
+function useLiveWaits(initial: WaitRow[], cityId: string) {
   const [rows, setRows] = useState(initial);
+
+  // Reset to this city's data whenever the city changes
+  useEffect(() => {
+    setRows(initial);
+  }, [cityId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const id = setInterval(() => {
       setRows(prev =>
@@ -186,99 +192,300 @@ function WaitBar({
   );
 }
 
-// ─── Hero visual: live queue card ─────────────────────────────
-function LiveQueueCard() {
-  const count = useLiveCount(247);
-  const rows = useLiveWaits([
-    { label: 'Kebab Palace · Mitte',     wait: 8  },
-    { label: 'Tokyo Ramen · Prenzlauer', wait: 14 },
-    { label: 'Pizza Roma · Kreuzberg',   wait: 22 },
-  ]);
+// ─── City data — most visited restaurants per city ────────────
+const CITIES = [
+  {
+    id: 'berlin',
+    label: 'Berlin',
+    flag: 'DE',
+    seed: 247,
+    rows: [
+      { label: "Mustafa's Kebap · Kreuzberg", wait: 31 }, // legendary queue
+      { label: 'Cocolo Ramen · Mitte',        wait: 14 },
+      { label: 'Curry 36 · Mehringdamm',      wait: 7  },
+    ],
+  },
+  {
+    id: 'paris',
+    label: 'Paris',
+    flag: 'FR',
+    seed: 312,
+    rows: [
+      { label: 'Bouillon Chartier · 9e',      wait: 26 }, // always a queue outside
+      { label: 'Septime · Bastille',           wait: 18 },
+      { label: 'Café de Flore · St-Germain',  wait: 9  },
+    ],
+  },
+  {
+    id: 'london',
+    label: 'London',
+    flag: 'GB',
+    seed: 198,
+    rows: [
+      { label: 'Dishoom · Covent Garden',     wait: 29 }, // 1h+ queues daily
+      { label: 'Padella · Borough Market',    wait: 17 },
+      { label: 'Bao · Soho',                  wait: 11 },
+    ],
+  },
+  {
+    id: 'amsterdam',
+    label: 'Amsterdam',
+    flag: 'NL',
+    seed: 183,
+    rows: [
+      { label: 'Pancake Bakery · Jordaan',    wait: 16 },
+      { label: 'Foodhallen · De Hallen',      wait: 8  },
+      { label: 'De Kas · Frankendael',        wait: 22 },
+    ],
+  },
+  {
+    id: 'madrid',
+    label: 'Madrid',
+    flag: 'ES',
+    seed: 271,
+    rows: [
+      { label: 'Sobrino de Botín · Sol',      wait: 21 }, // world's oldest restaurant
+      { label: 'Mercado San Miguel · Centro', wait: 13 },
+      { label: 'Casa Lucio · La Latina',      wait: 17 },
+    ],
+  },
+  {
+    id: 'rome',
+    label: 'Rome',
+    flag: 'IT',
+    seed: 224,
+    rows: [
+      { label: 'Da Enzo al 29 · Trastevere',  wait: 24 },
+      { label: 'Roscioli · Campo de\' Fiori', wait: 19 },
+      { label: 'Tonnarello · Trastevere',     wait: 12 },
+    ],
+  },
+] as const;
+
+type CityId = typeof CITIES[number]['id'];
+
+// ─── Scrambling number (split-flap effect) ───────────────────
+function FlapNumber({ value }: { value: number }) {
+  const [displayed, setDisplayed] = useState(value);
+  const prevRef = useRef(value);
+
+  useEffect(() => {
+    if (prevRef.current === value) return;
+    prevRef.current = value;
+    let step = 0;
+    const STEPS = 5;
+    const id = setInterval(() => {
+      if (step >= STEPS) { setDisplayed(value); clearInterval(id); }
+      else { setDisplayed(Math.floor(Math.random() * 35) + 1); step++; }
+    }, 38);
+    return () => clearInterval(id);
+  }, [value]);
+
+  return <>{displayed}</>;
+}
+
+// ─── Departure board status ───────────────────────────────────
+function boardStatus(wait: number): { label: string; color: string } {
+  if (wait < 10) return { label: 'ON TIME',  color: '#5fa870' };
+  if (wait < 20) return { label: 'MODERATE', color: '#C9A961' };
+  return               { label: 'DELAYED',   color: '#C44536' };
+}
+
+// ─── Departure board — hero visual ───────────────────────────
+const BOARD = {
+  bg:       '#0D0D0D',
+  amber:    '#F5A000',
+  amberDim: 'rgba(245,160,0,0.35)',
+  amberFaint:'rgba(245,160,0,0.15)',
+  line:     'rgba(245,160,0,0.10)',
+  mono:     "'Courier New', 'Courier', monospace",
+};
+
+function DepartureBoard() {
+  const [activeCity, setActiveCity] = useState<CityId>('berlin');
+  const city  = CITIES.find(c => c.id === activeCity)!;
+  const count = useLiveCount(city.seed);
+  const rows  = useLiveWaits([...city.rows], city.id);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: 0.25, ease: EASE }}
       style={{
-        background:    C.surface,
-        borderRadius:  20,
-        border:        'none',
-        boxShadow:     'none',
-        overflow:      'hidden',
-        maxWidth:      380,
-        width:         '100%',
+        background:   BOARD.bg,
+        borderRadius: 12,
+        overflow:     'hidden',
+        maxWidth:     420,
+        width:        '100%',
+        boxShadow:    '0 0 0 1px rgba(245,160,0,0.12), 0 32px 64px rgba(0,0,0,0.5)',
+        fontFamily:   BOARD.mono,
       }}
     >
-      {/* Card header */}
+      {/* ── Board header ── */}
       <div
-        className="flex items-center justify-between px-6 py-4"
-        style={{ borderBottom: `1px solid ${C.border}` }}
+        className="flex items-center justify-between px-5 py-3"
+        style={{ borderBottom: `1px solid ${BOARD.line}` }}
       >
         <div>
-          <p
-            className="text-[11px] uppercase tracking-widest font-medium"
-            style={{ fontFamily: F.sans, color: C.fgSubtle, letterSpacing: '0.1em' }}
-          >
+          <p style={{ color: BOARD.amberFaint, fontSize: 8, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
             Queue Intelligence
           </p>
-          <p
-            className="text-sm font-medium mt-0.5"
-            style={{ fontFamily: F.sans, color: C.fg }}
+          <motion.p
+            key={city.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            style={{ color: BOARD.amber, fontSize: 13, fontWeight: 700, marginTop: 2, letterSpacing: '0.06em' }}
           >
-            Berlin, DE
-          </p>
+            {city.label.toUpperCase()} · {city.flag}
+          </motion.p>
         </div>
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-          style={{ background: 'rgba(95,168,112,0.10)' }}
-        >
+        <div className="flex items-center gap-2">
           <span
             className="w-1.5 h-1.5 rounded-full animate-pulse block"
-            style={{ background: C.green }}
+            style={{ background: '#5fa870' }}
           />
-          <span
-            className="text-xs font-medium"
-            style={{ fontFamily: F.sans, color: '#2a6e3a' }}
-          >
-            Live
-          </span>
+          <span style={{ color: '#5fa870', fontSize: 9, letterSpacing: '0.14em', fontWeight: 700 }}>LIVE</span>
         </div>
       </div>
 
-      {/* Wait bars */}
-      <div className="px-6">
-        {rows.map((r, i) => (
-          <WaitBar
-            key={r.label}
-            label={r.label}
-            wait={r.wait}
-            delay={i * 0.1}
-            last={i === rows.length - 1}
-          />
+      {/* ── City tabs ── */}
+      <div
+        className="flex overflow-x-auto gap-1.5 px-4 py-2.5"
+        style={{ borderBottom: `1px solid ${BOARD.line}` }}
+      >
+        {CITIES.map(c => (
+          <button
+            key={c.id}
+            onClick={() => setActiveCity(c.id)}
+            className="flex-shrink-0 cursor-pointer transition-all"
+            style={{
+              padding:       '3px 9px',
+              fontSize:      9,
+              fontFamily:    BOARD.mono,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              background:    activeCity === c.id ? BOARD.amber : 'transparent',
+              color:         activeCity === c.id ? BOARD.bg    : BOARD.amberDim,
+              border:        activeCity === c.id ? 'none'      : `1px solid ${BOARD.line}`,
+              borderRadius:  3,
+              fontWeight:    700,
+            }}
+          >
+            {c.label}
+          </button>
         ))}
       </div>
 
-      {/* Card footer */}
+      {/* ── Column headers ── */}
       <div
-        className="flex items-center justify-between px-6 py-3"
-        style={{ background: C.surfaceDim }}
+        className="grid px-5 py-2"
+        style={{
+          gridTemplateColumns: '1fr 54px 82px',
+          gap: 8,
+          borderBottom: `1px solid ${BOARD.line}`,
+        }}
       >
-        <span
-          className="text-xs"
-          style={{ fontFamily: F.sans, color: C.fgSubtle }}
+        {['VENUE', 'WAIT', 'STATUS'].map((h, i) => (
+          <p
+            key={h}
+            style={{
+              color:         BOARD.amberFaint,
+              fontSize:      8,
+              letterSpacing: '0.16em',
+              textAlign:     i === 0 ? 'left' : i === 1 ? 'center' : 'right',
+            }}
+          >
+            {h}
+          </p>
+        ))}
+      </div>
+
+      {/* ── Rows ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={city.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
-          Updated just now
+          {rows.map((r, i) => {
+            const [venue, district] = r.label.split(' · ');
+            const st = boardStatus(r.wait);
+            return (
+              <motion.div
+                key={r.label}
+                initial={{ opacity: 0, rotateX: -70 }}
+                animate={{ opacity: 1, rotateX: 0 }}
+                transition={{ duration: 0.28, delay: i * 0.09, ease: EASE }}
+                style={{
+                  display:              'grid',
+                  gridTemplateColumns:  '1fr 54px 82px',
+                  gap:                  8,
+                  padding:              '10px 20px',
+                  borderBottom:         i < rows.length - 1 ? `1px solid ${BOARD.line}` : 'none',
+                  alignItems:           'center',
+                  perspective:          600,
+                }}
+              >
+                {/* Venue */}
+                <div>
+                  <p style={{ color: BOARD.amber, fontSize: 12, fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.2 }}>
+                    {venue}
+                  </p>
+                  <p style={{ color: BOARD.amberDim, fontSize: 8, letterSpacing: '0.08em', marginTop: 3 }}>
+                    {district ?? ''}
+                  </p>
+                </div>
+
+                {/* Wait */}
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: BOARD.amber, fontSize: 22, fontWeight: 700, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+                    <FlapNumber value={r.wait} />
+                  </p>
+                  <p style={{ color: BOARD.amberFaint, fontSize: 8, letterSpacing: '0.12em', marginTop: 2 }}>MIN</p>
+                </div>
+
+                {/* Status */}
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{
+                    display:       'inline-block',
+                    padding:       '3px 6px',
+                    borderRadius:  2,
+                    fontSize:      8,
+                    fontWeight:    700,
+                    letterSpacing: '0.1em',
+                    color:         st.color,
+                    border:        `1px solid ${st.color}`,
+                    background:    `${st.color}18`,
+                  }}>
+                    {st.label}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Board footer ── */}
+      <div
+        className="flex items-center justify-between px-5 py-2.5"
+        style={{ borderTop: `1px solid ${BOARD.line}`, background: 'rgba(245,160,0,0.025)' }}
+      >
+        <span style={{ color: BOARD.amberFaint, fontSize: 8, letterSpacing: '0.12em' }}>
+          UPDATED JUST NOW
         </span>
         <motion.span
           key={count}
-          initial={{ opacity: 0.4 }}
+          initial={{ opacity: 0.3 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-xs tabular-nums"
-          style={{ fontFamily: F.sans, color: C.fgMuted }}
+          style={{ color: BOARD.amberDim, fontSize: 8, letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}
         >
-          {count} queues tracked
+          {count} QUEUES TRACKED
         </motion.span>
       </div>
     </motion.div>
@@ -682,9 +889,9 @@ export default function Landing() {
             </FadeUp>
           </div>
 
-          {/* ── Right: live queue card ── */}
+          {/* ── Right: departure board ── */}
           <div className="flex items-center justify-center lg:justify-end">
-            <LiveQueueCard />
+            <DepartureBoard />
           </div>
         </div>
         </div>
