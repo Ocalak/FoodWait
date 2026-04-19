@@ -5,7 +5,7 @@
   "packageManager": "pnpm@9.15.4",
   "license": "MIT",
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "pnpm": {
     "overrides": {
