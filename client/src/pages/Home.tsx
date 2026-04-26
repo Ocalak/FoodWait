@@ -278,8 +278,8 @@ export default function Home() {
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
 
       {/* ── Top Nav ── */}
-      <header className="sticky top-0 z-40 border-b-2 border-black" style={{ background: 'var(--background)' }}>
-        <div className="max-w-screen-2xl mx-auto px-6 sm:px-10 lg:pl-[4cm] lg:pr-16 flex items-center justify-between h-16">
+      <header className="sticky top-0 z-40 border-b-2 border-black px-4 sm:px-8 md:px-16 lg:px-24" style={{ background: 'var(--background)' }}>
+        <div className="flex items-center justify-between h-16">
           <button onClick={() => setLocation('/')} className="flex items-center gap-2 font-beb text-2xl uppercase tracking-widest text-foreground hover:text-primary transition-colors">
             <ArrowLeft className="w-5 h-5" />
             QBite
@@ -291,7 +291,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-screen-2xl mx-auto px-6 sm:px-10 lg:pl-[4cm] lg:pr-16 pt-10 pb-12">
+      <main className="px-4 sm:px-8 md:px-16 lg:px-24 pt-10 pb-16">
 
         {/* ── Search Panel ── */}
         <div className="mb-12">
