@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'wouter';
-import { ArrowUpRight, Search, BarChart2, Zap } from 'lucide-react';
+import { useLocation, Link } from 'wouter';
+import { MapPin, Clock, Search, Star, Zap, BarChart2 } from 'lucide-react';
 import IntroOverlay from '@/components/IntroOverlay';
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -21,9 +21,9 @@ function FadeUp({ children, delay = 0, className = '' }: { children: React.React
   );
 }
 
-/* ══════════════════════════════════════════════════════════
-   DEPARTURE BOARD — design tokens
-══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   DEPARTURE BOARD
+══════════════════════════════════════════════════ */
 const BD = {
   bg:         'linear-gradient(160deg, #0C0C0C 0%, #111111 55%, #0E0E0E 100%)',
   tile:       '#1C1C1C',
@@ -40,7 +40,6 @@ const BD = {
   mono:       "'Courier New', 'Courier', monospace",
 } as const;
 
-/* ── Individual flip tile ── */
 function FlapChar({ char, animKey, delay = 0 }: { char: string; animKey: number; delay?: number }) {
   const [displayed, setDisplayed] = useState(char);
   const prevKey = useRef(animKey);
@@ -71,17 +70,12 @@ function FlapChar({ char, animKey, delay = 0 }: { char: string; animKey: number;
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 15, height: 23,
-        background: BD.tile,
-        border: `1px solid ${BD.tileBorder}`,
-        borderRadius: 3,
-        margin: '0 1px',
-        position: 'relative', overflow: 'hidden',
-        transformOrigin: 'center top',
-        flexShrink: 0,
+        background: BD.tile, border: `1px solid ${BD.tileBorder}`, borderRadius: 3,
+        margin: '0 1px', position: 'relative', overflow: 'hidden',
+        transformOrigin: 'center top', flexShrink: 0,
         boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.8)',
       }}
     >
-      {/* center divider */}
       <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, background: BD.tileLine, zIndex: 3 }} />
       <span style={{
         fontFamily: BD.mono, fontSize: 12, fontWeight: 700,
@@ -94,7 +88,6 @@ function FlapChar({ char, animKey, delay = 0 }: { char: string; animKey: number;
   );
 }
 
-/* ── Tiled destination string ── */
 function FlapText({ text, animKey }: { text: string; animKey: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap', gap: 0 }}>
@@ -105,28 +98,23 @@ function FlapText({ text, animKey }: { text: string; animKey: number }) {
   );
 }
 
-/* ── Status badge ── */
 type DeptStatus = 'ON TIME' | 'DELAYED' | 'BOARDING';
 function StatusBadge({ status }: { status: DeptStatus }) {
   const cfg: Record<DeptStatus, { color: string; bg: string; border: string }> = {
-    'ON TIME':  { color: BD.green,  bg: 'rgba(82,178,107,0.12)',  border: 'rgba(82,178,107,0.32)'  },
-    'DELAYED':  { color: BD.red,    bg: 'rgba(224,68,68,0.12)',   border: 'rgba(224,68,68,0.32)'   },
-    'BOARDING': { color: BD.amber,  bg: 'rgba(245,160,0,0.12)',   border: 'rgba(245,160,0,0.32)'   },
+    'ON TIME':  { color: BD.green, bg: 'rgba(82,178,107,0.12)',  border: 'rgba(82,178,107,0.32)'  },
+    'DELAYED':  { color: BD.red,   bg: 'rgba(224,68,68,0.12)',   border: 'rgba(224,68,68,0.32)'   },
+    'BOARDING': { color: BD.amber, bg: 'rgba(245,160,0,0.12)',   border: 'rgba(245,160,0,0.32)'   },
   };
   const c = cfg[status];
   return (
-    <motion.span
-      key={status}
-      initial={{ opacity: 0, scale: 0.88 }}
-      animate={{ opacity: 1, scale: 1 }}
+    <motion.span key={status}
+      initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.22, ease: BD_EASE }}
       style={{
         display: 'inline-block', padding: '4px 10px', borderRadius: 3,
-        fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em',
-        fontFamily: BD.mono,
+        fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', fontFamily: BD.mono,
         color: c.color, background: c.bg, border: `1px solid ${c.border}`,
-        textShadow: `0 0 8px ${c.color}50`,
-        whiteSpace: 'nowrap',
+        textShadow: `0 0 8px ${c.color}50`, whiteSpace: 'nowrap',
       }}
     >
       {status}
@@ -134,7 +122,6 @@ function StatusBadge({ status }: { status: DeptStatus }) {
   );
 }
 
-/* ── Data ── */
 interface DeptRow {
   key: string; time: string; destination: string;
   city: string; gate: string; wait: number;
@@ -183,20 +170,17 @@ function useClock() {
   return t;
 }
 
-/* ── The board ── */
 function DepartureBoard() {
   const clock = useClock();
   const [rows, setRows] = useState<DeptRow[]>(buildInitialRows);
   const [count, setCount] = useState(247);
-  const poolIdx = useRef(6);
+  const poolIdx = useRef(7);
 
-  // count ticks
   useEffect(() => {
     const id = setInterval(() => setCount(c => c + (Math.random() > 0.45 ? 1 : -1)), 3400);
     return () => clearInterval(id);
   }, []);
 
-  // random status/wait flip every 2.6s
   useEffect(() => {
     const id = setInterval(() => {
       setRows(prev => {
@@ -211,7 +195,6 @@ function DepartureBoard() {
     return () => clearInterval(id);
   }, []);
 
-  // row rotation — top row departs every 9s
   useEffect(() => {
     const id = setInterval(() => {
       setRows(prev => {
@@ -227,132 +210,74 @@ function DepartureBoard() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.9, delay: 0.25, ease: BD_EASE }}
       style={{
         background: BD.bg, borderRadius: 16, overflow: 'hidden',
         maxWidth: 720, width: '100%',
-        boxShadow: `0 0 0 1px rgba(245,160,0,0.13),
-                    0 2px 4px rgba(0,0,0,0.9),
-                    0 40px 80px rgba(0,0,0,0.65)`,
+        boxShadow: `0 0 0 1px rgba(245,160,0,0.13), 0 2px 4px rgba(0,0,0,0.9), 0 40px 80px rgba(0,0,0,0.65)`,
         position: 'relative',
       }}
     >
-      {/* grain texture */}
+      {/* grain */}
       <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.035, pointerEvents: 'none', zIndex: 0 }}>
         <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch" /><feColorMatrix type="saturate" values="0" /></filter>
         <rect width="100%" height="100%" filter="url(#grain)" />
       </svg>
 
-      {/* ── Header ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '22px 30px',
-        borderBottom: `1px solid ${BD.divider}`,
-        background: 'rgba(0,0,0,0.35)',
-        position: 'relative', zIndex: 1,
-      }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '22px 30px', borderBottom: `1px solid ${BD.divider}`, background: 'rgba(0,0,0,0.35)', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            padding: '4px 10px', border: `2px solid ${BD.amber}`, borderRadius: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: BD.mono, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em',
-            color: BD.amber, boxShadow: `0 0 14px ${BD.amberGlow}`,
-          }}>QBI</div>
+          <div style={{ padding: '4px 10px', border: `2px solid ${BD.amber}`, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: BD.mono, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', color: BD.amber, boxShadow: `0 0 14px ${BD.amberGlow}` }}>
+            QBI
+          </div>
           <div>
-            <p style={{ color: BD.amberFaint, fontSize: 9, letterSpacing: '0.2em', fontFamily: BD.mono, textTransform: 'uppercase', marginBottom: 3 }}>
-              Queue Intelligence
-            </p>
-            <p style={{ color: BD.amber, fontSize: 22, fontWeight: 700, letterSpacing: '0.14em', fontFamily: BD.mono, textShadow: `0 0 18px ${BD.amberGlow}` }}>
-              Queue Board
-            </p>
+            <p style={{ color: BD.amberFaint, fontSize: 9, letterSpacing: '0.2em', fontFamily: BD.mono, textTransform: 'uppercase', marginBottom: 3 }}>Queue Intelligence</p>
+            <p style={{ color: BD.amber, fontSize: 22, fontWeight: 700, letterSpacing: '0.14em', fontFamily: BD.mono, textShadow: `0 0 18px ${BD.amberGlow}` }}>Queue Board</p>
           </div>
         </div>
-
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span className="animate-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: BD.green, display: 'block', boxShadow: `0 0 7px ${BD.green}` }} />
             <span style={{ color: BD.green, fontSize: 10, fontFamily: BD.mono, fontWeight: 700, letterSpacing: '0.12em' }}>LIVE</span>
           </div>
-          <motion.span
-            key={clock}
-            initial={{ opacity: 0.4 }}
-            animate={{ opacity: 1 }}
+          <motion.span key={clock} initial={{ opacity: 0.4 }} animate={{ opacity: 1 }}
             style={{ color: BD.amber, fontSize: 19, fontFamily: BD.mono, fontWeight: 700, letterSpacing: '0.1em', textShadow: `0 0 14px ${BD.amberGlow}` }}
-          >
-            {clock}
-          </motion.span>
+          >{clock}</motion.span>
         </div>
       </div>
 
-      {/* ── Column headers ── */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '76px 1fr 56px 100px',
-        gap: 12, padding: '9px 30px',
-        borderBottom: `1px solid ${BD.divider}`,
-        background: 'rgba(0,0,0,0.2)',
-        position: 'relative', zIndex: 1,
-      }}>
-        {[
-          { h: 'TIME',       a: 'left'   },
-          { h: 'RESTAURANT', a: 'left'   },
-          { h: 'GATE',       a: 'center' },
-          { h: 'STATUS',     a: 'right'  },
-        ].map(({ h, a }) => (
-          <p key={h} style={{ color: BD.amberDim, fontSize: 10, letterSpacing: '0.16em', fontFamily: BD.mono, textAlign: a as 'left' | 'center' | 'right' }}>
-            {h}
-          </p>
+      {/* Column headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: '76px 1fr 56px 100px', gap: 12, padding: '9px 30px', borderBottom: `1px solid ${BD.divider}`, background: 'rgba(0,0,0,0.2)', position: 'relative', zIndex: 1 }}>
+        {[{ h: 'TIME', a: 'left' }, { h: 'RESTAURANT', a: 'left' }, { h: 'GATE', a: 'center' }, { h: 'STATUS', a: 'right' }].map(({ h, a }) => (
+          <p key={h} style={{ color: BD.amberDim, fontSize: 10, letterSpacing: '0.16em', fontFamily: BD.mono, textAlign: a as 'left' | 'center' | 'right' }}>{h}</p>
         ))}
       </div>
 
-      {/* ── Rows ── */}
+      {/* Rows */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         <AnimatePresence mode="sync">
           {rows.map((row, i) => (
-            <motion.div
-              key={row.key}
-              layout
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+            <motion.div key={row.key} layout
+              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.38, ease: BD_EASE }}
               whileHover={{ backgroundColor: 'rgba(255,255,255,0.022)' }}
-              style={{
-                display: 'grid', gridTemplateColumns: '76px 1fr 56px 100px',
-                gap: 12, padding: '14px 30px',
-                borderBottom: i < rows.length - 1 ? `1px solid ${BD.divider}` : 'none',
-                alignItems: 'center',
-                transition: 'background-color 0.2s',
-              }}
+              style={{ display: 'grid', gridTemplateColumns: '76px 1fr 56px 100px', gap: 12, padding: '14px 30px', borderBottom: i < rows.length - 1 ? `1px solid ${BD.divider}` : 'none', alignItems: 'center', transition: 'background-color 0.2s' }}
             >
-              {/* Time */}
               <span style={{ fontFamily: BD.mono, fontSize: 15, fontWeight: 700, color: BD.amber, letterSpacing: '0.06em', textShadow: `0 0 10px ${BD.amberFaint}` }}>
                 {row.time}
               </span>
-
-              {/* Restaurant — tiles + city/wait inline */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', minWidth: 0 }}>
                 <div style={{ flexShrink: 0 }}>
                   <FlapText text={row.destination} animKey={row.animKey} />
                 </div>
-                <span style={{
-                  color: BD.amberDim, fontSize: 12, fontFamily: BD.mono,
-                  letterSpacing: '0.07em', whiteSpace: 'nowrap', flexShrink: 0,
-                  textShadow: `0 0 6px ${BD.amberFaint}`,
-                }}>
+                <span style={{ color: BD.amberDim, fontSize: 12, fontFamily: BD.mono, letterSpacing: '0.07em', whiteSpace: 'nowrap', flexShrink: 0, textShadow: `0 0 6px ${BD.amberFaint}` }}>
                   {row.city} · {row.wait}m
                 </span>
               </div>
-
-              {/* Gate */}
               <div style={{ textAlign: 'center' }}>
-                <span style={{ fontFamily: BD.mono, fontSize: 13, fontWeight: 700, color: 'rgba(240,240,240,0.65)', letterSpacing: '0.05em' }}>
-                  {row.gate}
-                </span>
+                <span style={{ fontFamily: BD.mono, fontSize: 13, fontWeight: 700, color: 'rgba(240,240,240,0.65)', letterSpacing: '0.05em' }}>{row.gate}</span>
               </div>
-
-              {/* Status */}
               <div style={{ textAlign: 'right' }}>
                 <StatusBadge status={row.status} />
               </div>
@@ -361,26 +286,12 @@ function DepartureBoard() {
         </AnimatePresence>
       </div>
 
-      {/* ── Footer ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '11px 30px',
-        borderTop: `1px solid ${BD.divider}`,
-        background: 'rgba(245,160,0,0.018)',
-        position: 'relative', zIndex: 1,
-      }}>
-        <span style={{ color: BD.amberFaint, fontSize: 9, fontFamily: BD.mono, letterSpacing: '0.12em' }}>
-          UPDATED JUST NOW
-        </span>
-        <motion.span
-          key={count}
-          initial={{ opacity: 0.3 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+      {/* Footer */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 30px', borderTop: `1px solid ${BD.divider}`, background: 'rgba(245,160,0,0.018)', position: 'relative', zIndex: 1 }}>
+        <span style={{ color: BD.amberFaint, fontSize: 9, fontFamily: BD.mono, letterSpacing: '0.12em' }}>UPDATED JUST NOW</span>
+        <motion.span key={count} initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
           style={{ color: BD.amberDim, fontSize: 9, fontFamily: BD.mono, letterSpacing: '0.08em' }}
-        >
-          {count} QUEUES TRACKED
-        </motion.span>
+        >{count} QUEUES TRACKED</motion.span>
       </div>
     </motion.div>
   );
@@ -388,26 +299,24 @@ function DepartureBoard() {
 
 /* ── Phone mockup ── */
 function PhoneMockup() {
-  const rows = [
-    { name: 'Kebab Palace', dist: '0.3 km', wait: 8,  bg: 'rgba(95,168,112,0.1)',  border: 'rgba(95,168,112,0.3)',  text: '#2a6e3a' },
-    { name: 'Tokyo Ramen',  dist: '0.7 km', wait: 14, bg: 'rgba(201,169,97,0.12)', border: 'rgba(201,169,97,0.4)',  text: '#7a5e1a' },
-    { name: 'Pizza Roma',   dist: '1.1 km', wait: 22, bg: 'rgba(196,69,54,0.08)',  border: 'rgba(196,69,54,0.25)', text: '#8b2a20' },
+  const restaurants = [
+    { name: 'Kebab Palace', dist: '0.3 km', wait: 8,  rating: 4.7, bg: '#f0fdf4', border: '#86efac', text: '#166534' },
+    { name: 'Tokyo Ramen',  dist: '0.7 km', wait: 14, rating: 4.5, bg: '#fffbeb', border: '#fcd34d', text: '#92400e' },
+    { name: 'Pizza Roma',   dist: '1.1 km', wait: 22, rating: 4.2, bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
   ];
   return (
     <div style={{ width: 260, height: 530, borderRadius: 40, background: '#0A0A0A', padding: 3, boxShadow: '0 0 0 2px #333, 0 50px 100px rgba(0,0,0,0.5)' }}>
       <div style={{ borderRadius: 37, overflow: 'hidden', height: '100%', background: '#F4F1DE', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '10px 16px 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 10, fontWeight: 500, fontFamily: F.sans }}>9:41</span>
-          <div style={{ width: 56, height: 13, background: '#111', borderRadius: 10 }} />
-          <span style={{ fontSize: 9, color: C.fgMuted }}>●●●</span>
+          <span style={{ fontSize: 10, fontWeight: 700 }}>9:41</span>
+          <div style={{ width: 60, height: 14, background: '#0A0A0A', borderRadius: 10 }} />
+          <span style={{ fontSize: 10, fontWeight: 700 }}>●●●</span>
         </div>
-        {/* Brand row */}
-        <div style={{ padding: '3px 14px 8px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: F.display, fontSize: 13, fontWeight: 600, color: C.fg }}>QBite</span>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, display: 'block', boxShadow: `0 0 5px ${C.green}` }} />
+        <div style={{ padding: '4px 14px 8px', borderBottom: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 2 }}>QBITE</span>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#D42027', boxShadow: '0 0 6px #D42027' }} />
         </div>
-        {/* Map area */}
-        <div style={{ height: 110, background: '#dde8d5', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ height: 115, background: '#c8d9bf', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
           <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
             <rect width="100%" height="100%" fill="#c8d9bf" />
             <line x1="0" y1="57" x2="260" y2="57" stroke="#b5c9a9" strokeWidth="9" />
@@ -423,45 +332,42 @@ function PhoneMockup() {
           <div style={{ position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',width:10,height:10,background:'#3b82f6',borderRadius:'50%',border:'2px solid white' }} />
           <div style={{ position:'absolute',bottom:5,right:7,background:'rgba(10,10,10,0.7)',color:'#fff',fontSize:7.5,fontWeight:700,padding:'2px 5px',borderRadius:4,textTransform:'uppercase',letterSpacing:1 }}>Live</div>
         </div>
-        {/* Search chip */}
-        <div style={{ padding: '6px 10px 4px' }}>
-          <div style={{ background: 'white', border: `1px solid ${C.border}`, borderRadius: 7, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.accent, display: 'block' }} />
-            <span style={{ fontSize: 7, fontWeight: 500, color: C.fgMuted, fontFamily: F.sans }}>Kebab · Berlin</span>
-            <div style={{ marginLeft: 'auto', fontSize: 7, background: C.accent, color: 'white', padding: '1px 5px', borderRadius: 3, fontWeight: 600 }}>GO</div>
+        <div style={{ padding:'7px 10px 5px' }}>
+          <div style={{ background:'white',border:'1.5px solid #0A0A0A',borderRadius:8,padding:'5px 8px',display:'flex',alignItems:'center',gap:5 }}>
+            <div style={{ width:7,height:7,borderRadius:'50%',background:'#D42027' }} />
+            <span style={{ fontSize:7.5,fontWeight:700,color:'#555',letterSpacing:1 }}>KEBAB · BERLIN</span>
+            <div style={{ marginLeft:'auto',fontSize:7.5,background:'#D42027',color:'white',padding:'2px 5px',borderRadius:4,fontWeight:800 }}>GO</div>
           </div>
         </div>
-        {/* Results */}
-        <div style={{ flex: 1, padding: '0 8px 6px', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
-          <p style={{ fontSize: 7, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase', color: C.fgSubtle, fontFamily: F.sans }}>3 nearby</p>
-          {rows.map((r, i) => (
-            <div key={i} style={{ background: 'white', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 7px', display: 'flex', alignItems: 'center', gap: 5, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: 'white', fontSize: 7, fontWeight: 700 }}>{i + 1}</span>
+        <div style={{ flex:1,padding:'0 8px 6px',display:'flex',flexDirection:'column',gap:5,overflow:'hidden' }}>
+          <div style={{ fontSize:7.5,fontWeight:900,letterSpacing:2,textTransform:'uppercase',color:'#888' }}>3 nearby restaurants</div>
+          {restaurants.map((r,i)=>(
+            <div key={i} style={{ background:'white',border:'1.5px solid #0A0A0A',borderRadius:10,padding:'6px 8px',display:'flex',alignItems:'center',gap:6,boxShadow:'1.5px 1.5px 0 #0A0A0A' }}>
+              <div style={{ width:18,height:18,borderRadius:'50%',background:'#D42027',border:'1.5px solid #0A0A0A',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                <span style={{ color:'white',fontSize:8,fontWeight:900 }}>{i+1}</span>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 8.5, fontWeight: 600, color: C.fg, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: F.sans }}>{r.name}</p>
-                <p style={{ fontSize: 6.5, color: C.fgSubtle, fontFamily: F.sans }}>{r.dist}</p>
+              <div style={{ flex:1,minWidth:0 }}>
+                <div style={{ fontSize:9,fontWeight:900,color:'#0A0A0A',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.name}</div>
+                <div style={{ fontSize:7,color:'#999',fontWeight:600 }}>{r.dist} · ★ {r.rating}</div>
               </div>
-              <div style={{ background: r.bg, border: `1px solid ${r.border}`, borderRadius: 6, padding: '2px 5px', textAlign: 'center', flexShrink: 0 }}>
-                <p style={{ fontSize: 11, fontWeight: 300, color: r.text, lineHeight: 1, fontFamily: F.display }}>{r.wait}</p>
-                <p style={{ fontSize: 5.5, color: r.text, textTransform: 'uppercase', letterSpacing: 0.3, fontFamily: F.sans }}>min</p>
+              <div style={{ background:r.bg,border:`1.5px solid ${r.border}`,borderRadius:7,padding:'3px 6px',textAlign:'center',flexShrink:0 }}>
+                <div style={{ fontSize:12,fontWeight:900,color:r.text,lineHeight:1 }}>{r.wait}</div>
+                <div style={{ fontSize:6,fontWeight:900,color:r.text,textTransform:'uppercase',letterSpacing:0.5 }}>min</div>
               </div>
             </div>
           ))}
         </div>
-        {/* Home bar */}
-        <div style={{ height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 48, height: 2.5, background: C.fg, borderRadius: 2, opacity: 0.15 }} />
+        <div style={{ height:20,display:'flex',alignItems:'center',justifyContent:'center' }}>
+          <div style={{ width:56,height:3,background:'#0A0A0A',borderRadius:2,opacity:0.2 }} />
         </div>
       </div>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
    MAIN PAGE
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════ */
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [showIntro, setShowIntro] = useState(false);
@@ -469,7 +375,7 @@ export default function Landing() {
   const goToApp  = () => { setShowIntro(false); setLocation('/app'); };
 
   return (
-    <div style={{ background: C.bg, fontFamily: F.sans }}>
+    <div className="overflow-x-hidden" style={{ background: '#FAFAF8' }}>
       <AnimatePresence>
         {showIntro && <IntroOverlay onFinish={goToApp} onSkip={goToApp} />}
       </AnimatePresence>
@@ -481,23 +387,11 @@ export default function Landing() {
           {/* Left: copy */}
           <div className="flex-1 z-10 min-w-0 lg:pr-6">
             <FadeUp>
-              <div
-                className="inline-flex items-center gap-2 mb-8 px-3.5 py-1.5 rounded-full"
-                style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${C.border}` }}
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full block"
-                  style={{ background: C.mustard }}
-                />
-                <span
-                  className="text-xs font-medium"
-                  style={{ fontFamily: F.sans, color: C.fgMuted, letterSpacing: '0.02em' }}
-                >
-                  Queue intelligence for restaurants
-                </span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 border-black/10 mb-8 bg-white">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Queue Intelligence Active</span>
               </div>
             </FadeUp>
-
             <FadeUp delay={0.1}>
               <h1 className="font-beb uppercase leading-[0.88] tracking-tight text-black mb-6"
                 style={{ fontSize: 'clamp(2.5rem, 5.5vw, 4.5rem)', textShadow: '3px 3px 0 rgba(239,202,82,0.55)' }}>
@@ -505,13 +399,11 @@ export default function Landing() {
                 <span style={{ color: 'var(--primary)' }}>QUEUE.</span>
               </h1>
             </FadeUp>
-
             <FadeUp delay={0.2}>
               <p className="text-zinc-500 font-semibold text-base md:text-lg leading-relaxed max-w-md mb-8">
                 Know your wait time before you leave home. Powered by Markov chain queueing theory — not guesswork.
               </p>
             </FadeUp>
-
             <FadeUp delay={0.3}>
               <motion.button onClick={launchApp}
                 whileHover={{ y: -4, boxShadow: '8px 8px 0 #0A0A0A' }}
@@ -523,7 +415,6 @@ export default function Landing() {
                 Find Food Now →
               </motion.button>
             </FadeUp>
-
             <FadeUp delay={0.5}>
               <div className="flex gap-8 mt-10 pt-8 border-t-2 border-black/[0.12]">
                 {[
@@ -545,7 +436,6 @@ export default function Landing() {
           <div className="flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end">
             <DepartureBoard />
           </div>
-        </div>
         </div>
       </section>
 
@@ -643,8 +533,7 @@ export default function Landing() {
             <FadeUp delay={0.4}>
               <motion.button onClick={launchApp}
                 whileHover={{ y: -3, boxShadow: '6px 6px 0 rgba(239,202,82,0.4)' }}
-                whileTap={{ y: 0 }}
-                transition={{ duration: 0.15 }}
+                whileTap={{ y: 0 }} transition={{ duration: 0.15 }}
                 className="font-beb text-lg uppercase tracking-widest px-8 py-4 rounded-xl border-[3px] border-black text-black"
                 style={{ background: 'var(--secondary)', boxShadow: '4px 4px 0 rgba(239,202,82,0.25)' }}
               >
@@ -660,93 +549,11 @@ export default function Landing() {
               transition={{ duration: 1.2, ease }}
               style={{ perspective: 900 }}
             >
-              QBite
-            </span>
-            <p
-              className="text-sm leading-relaxed mb-8"
-              style={{
-                fontFamily: F.sans,
-                color:      'rgba(232,230,224,0.4)',
-                maxWidth:   280,
-                lineHeight: 1.65,
-              }}
-            >
-              Real-time queue intelligence for restaurants across Europe.
-              Free, forever. No signup required.
-            </p>
-            {/* Newsletter */}
-            <div>
-              <p
-                className="text-xs font-medium uppercase tracking-widest mb-3"
-                style={{
-                  fontFamily:    F.sans,
-                  color:         'rgba(232,230,224,0.25)',
-                  letterSpacing: '0.1em',
-                }}
-              >
-                Stay informed
-              </p>
-              <AnimatePresence mode="wait">
-                {subscribed ? (
-                  <motion.div
-                    key="thanks"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35, ease: EASE }}
-                    className="flex items-center gap-2 py-2.5"
-                  >
-                    <span
-                      className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: 'rgba(95,168,112,0.2)' }}
-                    >
-                      <span style={{ color: C.green, fontSize: 10, lineHeight: 1 }}>✓</span>
-                    </span>
-                    <span
-                      className="text-sm"
-                      style={{ fontFamily: F.sans, color: 'rgba(232,230,224,0.5)' }}
-                    >
-                      You're on the list.
-                    </span>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onSubmit={handleSubscribe}
-                    className="flex gap-2"
-                  >
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="flex-1 text-sm px-4 py-2.5 rounded-full outline-none min-w-0"
-                      style={{
-                        fontFamily: F.sans,
-                        background: 'rgba(255,255,255,0.06)',
-                        border:     '1px solid rgba(255,255,255,0.10)',
-                        color:      '#E8E6E0',
-                      }}
-                      aria-label="Email address for newsletter"
-                    />
-                    <motion.button
-                      type="submit"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ duration: 0.15 }}
-                      className="text-sm font-medium text-white px-5 py-2.5 rounded-full flex-shrink-0 cursor-pointer"
-                      style={{ fontFamily: F.sans, background: C.accent }}
-                    >
-                      Subscribe
-                    </motion.button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+              <PhoneMockup />
+            </motion.div>
+          </FadeUp>
+        </div>
+      </section>
 
       {/* ── CTA ── */}
       <section className="w-full py-28 border-t-2 border-black px-6 md:px-12 lg:px-20 xl:px-32" style={{ background: 'var(--primary)' }}>
@@ -762,8 +569,7 @@ export default function Landing() {
         <FadeUp delay={0.3}>
           <motion.button onClick={launchApp}
             whileHover={{ y: -3, boxShadow: '7px 7px 0 #0A0A0A' }}
-            whileTap={{ y: 0, boxShadow: '2px 2px 0 #0A0A0A' }}
-            transition={{ duration: 0.15 }}
+            whileTap={{ y: 0, boxShadow: '2px 2px 0 #0A0A0A' }} transition={{ duration: 0.15 }}
             className="font-beb text-xl md:text-2xl uppercase tracking-widest px-10 py-4 rounded-2xl border-[3px] border-black text-black"
             style={{ background: 'var(--secondary)', boxShadow: '5px 5px 0 #0A0A0A' }}
           >
@@ -774,13 +580,15 @@ export default function Landing() {
           <p className="text-white/30 text-xs font-black uppercase tracking-widest">© 2026 QBite · Queue Intelligence Platform</p>
           <div className="flex items-center gap-6">
             {[{ label: 'Privacy Policy', path: '/privacy' }, { label: 'Impressum', path: '/impressum' }, { label: 'Contact', path: '/contact' }].map(link => (
-              <Link key={link.path} href={link.path} className="text-white/40 hover:text-white/80 text-xs font-black uppercase tracking-widest transition-colors cursor-pointer">
+              <Link key={link.path} href={link.path}
+                className="text-white/40 hover:text-white/80 text-xs font-black uppercase tracking-widest transition-colors cursor-pointer">
                 {link.label}
               </Link>
             ))}
           </div>
         </div>
       </section>
+
     </div>
   );
 }
